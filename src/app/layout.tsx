@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'WebAudit Pro — Free Website Audit Tool',
-  description: 'Get a free instant audit of your website. Check for SEO issues, missing contact forms, mobile responsiveness, and more.',
+  title: 'WebAudit Pro — Auditoria Gratuita de Sites',
+  description: 'Receba uma auditoria instantanea e gratuita do seu site. Verifique problemas de SEO, formularios de contato ausentes, responsividade mobile e muito mais.',
   openGraph: {
-    title: 'WebAudit Pro — Free Website Audit Tool',
-    description: 'Get a free instant audit of your website.',
+    title: 'WebAudit Pro — Auditoria Gratuita de Sites',
+    description: 'Receba uma auditoria instantanea e gratuita do seu site.',
     type: 'website',
   },
 }
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className="min-h-screen bg-slate-50">
         {children}
       </body>

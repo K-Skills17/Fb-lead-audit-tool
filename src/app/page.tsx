@@ -26,17 +26,16 @@ export default function Home() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Something went wrong')
+        setError(data.error || 'Algo deu errado')
         setLoading(false)
         return
       }
 
-      // Store results and navigate
       sessionStorage.setItem('auditResult', JSON.stringify(data))
       const encodedUrl = encodeURIComponent(url.trim())
       router.push(`/report?url=${encodedUrl}`)
     } catch {
-      setError('Network error. Please check your connection and try again.')
+      setError('Erro de conexao. Verifique sua internet e tente novamente.')
       setLoading(false)
     }
   }
@@ -48,19 +47,19 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm mb-8 backdrop-blur-sm">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Free instant audit — no signup required
+            Auditoria gratuita e instantanea — sem cadastro
           </div>
 
           <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-            Is Your Website
+            Seu Site Esta
             <span className="block gradient-accent bg-clip-text text-transparent">
-              Losing You Leads?
+              Perdendo Clientes?
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-2xl mx-auto">
-            Get a free instant audit of your website. We check for SEO gaps,
-            missing contact forms, mobile issues, and more — in seconds.
+            Receba uma auditoria gratuita e instantanea do seu site. Verificamos SEO,
+            formularios de contato, problemas mobile e muito mais — em segundos.
           </p>
 
           {/* URL Input Form */}
@@ -77,7 +76,7 @@ export default function Home() {
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Enter your website URL (e.g. example.com)"
+                  placeholder="Digite a URL do seu site (ex: exemplo.com.br)"
                   className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-slate-900 text-lg
                     placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400
                     shadow-lg"
@@ -97,9 +96,9 @@ export default function Home() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Auditing...
+                    Analisando...
                   </span>
-                ) : 'Audit My Site'}
+                ) : 'Auditar Meu Site'}
               </button>
             </div>
 
@@ -111,56 +110,80 @@ export default function Home() {
           </form>
 
           <p className="mt-6 text-sm text-slate-400">
-            Takes 5–15 seconds. We check SEO, contact forms, WhatsApp, CTAs, and mobile readiness.
+            Leva de 5 a 15 segundos. Verificamos SEO, formularios, WhatsApp, CTAs e responsividade mobile.
           </p>
         </div>
       </div>
 
-      {/* What We Check */}
+      {/* O Que Verificamos */}
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-slate-800 mb-4">
-            What We Check
+            O Que Verificamos
           </h2>
           <p className="text-center text-slate-500 mb-12 max-w-2xl mx-auto">
-            Our audit covers the most important factors that determine whether your website converts visitors into customers.
+            Nossa auditoria cobre os fatores mais importantes que determinam se seu site converte visitantes em clientes.
           </p>
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                icon: '🔍',
-                title: 'SEO Basics',
-                desc: 'Title tags, meta descriptions, headings, alt tags, Open Graph tags, and canonical URLs.',
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                ),
+                title: 'SEO Basico',
+                desc: 'Tags de titulo, meta descricoes, headings, alt tags, Open Graph e URLs canonicas.',
               },
               {
-                icon: '📱',
-                title: 'Mobile Readiness',
-                desc: 'Viewport configuration, responsive setup, and readable font sizes.',
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                ),
+                title: 'Responsividade Mobile',
+                desc: 'Configuracao de viewport, layout responsivo e tamanhos de fonte legiveis.',
               },
               {
-                icon: '📝',
-                title: 'Contact & Lead Capture',
-                desc: 'Contact forms, email links, phone links, and enquiry paths.',
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                ),
+                title: 'Contato e Captacao de Leads',
+                desc: 'Formularios de contato, links de e-mail, telefone e caminhos de consulta.',
               },
               {
-                icon: '💬',
-                title: 'WhatsApp Integration',
-                desc: 'WhatsApp chat buttons and links for instant customer communication.',
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                ),
+                title: 'Integracao WhatsApp',
+                desc: 'Botoes e links do WhatsApp para comunicacao instantanea com clientes.',
               },
               {
-                icon: '🎯',
-                title: 'Call-to-Action',
-                desc: 'Prominent CTA buttons above the fold and throughout the page.',
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  </svg>
+                ),
+                title: 'Chamada para Acao (CTA)',
+                desc: 'Botoes de CTA vistiveis acima da dobra e ao longo da pagina.',
               },
               {
-                icon: '🔒',
-                title: 'Technical Health',
-                desc: 'HTTPS, favicons, language tags, and mixed content warnings.',
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                ),
+                title: 'Saude Tecnica',
+                desc: 'HTTPS, favicons, atributo de idioma e avisos de conteudo misto.',
               },
             ].map((item) => (
               <div key={item.title} className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-3">{item.icon}</div>
+                <div className="text-blue-600 mb-3">{item.icon}</div>
                 <h3 className="font-semibold text-slate-800 mb-2">{item.title}</h3>
                 <p className="text-sm text-slate-500">{item.desc}</p>
               </div>
@@ -172,7 +195,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 py-8 px-4">
         <div className="max-w-5xl mx-auto text-center text-sm text-slate-400">
-          <p>WebAudit Pro — Free Website Audit Tool</p>
+          <p>WebAudit Pro — Ferramenta Gratuita de Auditoria de Sites</p>
         </div>
       </footer>
     </main>

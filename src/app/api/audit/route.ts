@@ -47,14 +47,14 @@ function checkSEO($: cheerio.CheerioAPI, url: string): AuditCheck[] {
   const title = $('title').text().trim()
   checks.push({
     category: 'SEO',
-    name: 'Page Title',
+    name: 'Titulo da Pagina',
     passed: title.length > 0 && title.length <= 70,
     severity: 'critical',
     message: !title
-      ? 'Missing page title tag — critical for search rankings'
+      ? 'Tag de titulo ausente — essencial para o ranqueamento nos buscadores'
       : title.length > 70
-        ? `Title is too long (${title.length} chars). Keep it under 70 characters`
-        : `Title tag found: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`,
+        ? `Titulo muito longo (${title.length} caracteres). Mantenha abaixo de 70 caracteres`
+        : `Tag de titulo encontrada: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`,
     points: 10,
   })
 
@@ -62,16 +62,16 @@ function checkSEO($: cheerio.CheerioAPI, url: string): AuditCheck[] {
   const metaDesc = $('meta[name="description"]').attr('content')?.trim() || ''
   checks.push({
     category: 'SEO',
-    name: 'Meta Description',
+    name: 'Meta Descricao',
     passed: metaDesc.length >= 50 && metaDesc.length <= 160,
     severity: 'critical',
     message: !metaDesc
-      ? 'Missing meta description — search engines use this in results'
+      ? 'Meta descricao ausente — buscadores usam isso nos resultados'
       : metaDesc.length < 50
-        ? `Meta description is too short (${metaDesc.length} chars). Aim for 50–160 characters`
+        ? `Meta descricao muito curta (${metaDesc.length} caracteres). Ideal entre 50 e 160 caracteres`
         : metaDesc.length > 160
-          ? `Meta description is too long (${metaDesc.length} chars). Keep it under 160 characters`
-          : 'Meta description is well-optimized',
+          ? `Meta descricao muito longa (${metaDesc.length} caracteres). Mantenha abaixo de 160 caracteres`
+          : 'Meta descricao bem otimizada',
     points: 10,
   })
 
@@ -79,14 +79,14 @@ function checkSEO($: cheerio.CheerioAPI, url: string): AuditCheck[] {
   const h1Count = $('h1').length
   checks.push({
     category: 'SEO',
-    name: 'H1 Heading',
+    name: 'Titulo H1',
     passed: h1Count === 1,
     severity: 'warning',
     message: h1Count === 0
-      ? 'No H1 heading found — every page should have exactly one H1'
+      ? 'Nenhum titulo H1 encontrado — toda pagina deve ter exatamente um H1'
       : h1Count > 1
-        ? `Found ${h1Count} H1 headings — use only one H1 per page`
-        : 'Single H1 heading found — good structure',
+        ? `Encontrados ${h1Count} titulos H1 — use apenas um H1 por pagina`
+        : 'Titulo H1 unico encontrado — boa estrutura',
     points: 8,
   })
 
@@ -99,14 +99,14 @@ function checkSEO($: cheerio.CheerioAPI, url: string): AuditCheck[] {
   const altRatio = images.length > 0 ? (images.length - imagesWithoutAlt.length) / images.length : 1
   checks.push({
     category: 'SEO',
-    name: 'Image Alt Tags',
+    name: 'Alt Tags de Imagens',
     passed: altRatio >= 0.8,
     severity: 'warning',
     message: images.length === 0
-      ? 'No images found on the page'
+      ? 'Nenhuma imagem encontrada na pagina'
       : imagesWithoutAlt.length === 0
-        ? `All ${images.length} images have alt text`
-        : `${imagesWithoutAlt.length} of ${images.length} images are missing alt text`,
+        ? `Todas as ${images.length} imagens possuem texto alternativo`
+        : `${imagesWithoutAlt.length} de ${images.length} imagens estao sem texto alternativo`,
     points: 7,
   })
 
@@ -114,12 +114,12 @@ function checkSEO($: cheerio.CheerioAPI, url: string): AuditCheck[] {
   const canonical = $('link[rel="canonical"]').attr('href')
   checks.push({
     category: 'SEO',
-    name: 'Canonical Tag',
+    name: 'Tag Canonica',
     passed: !!canonical,
     severity: 'info',
     message: canonical
-      ? 'Canonical URL is set'
-      : 'Missing canonical tag — helps prevent duplicate content issues',
+      ? 'URL canonica configurada'
+      : 'Tag canonica ausente — ajuda a evitar problemas de conteudo duplicado',
     points: 5,
   })
 
@@ -130,14 +130,14 @@ function checkSEO($: cheerio.CheerioAPI, url: string): AuditCheck[] {
   const ogScore = [ogTitle, ogDesc, ogImage].filter(Boolean).length
   checks.push({
     category: 'SEO',
-    name: 'Social Media Tags',
+    name: 'Tags de Redes Sociais',
     passed: ogScore >= 2,
     severity: 'info',
     message: ogScore === 3
-      ? 'Open Graph tags are complete (title, description, image)'
+      ? 'Tags Open Graph completas (titulo, descricao, imagem)'
       : ogScore === 0
-        ? 'No Open Graph tags found — links shared on social media will look plain'
-        : `Partial Open Graph tags (${ogScore}/3). Missing: ${[!ogTitle && 'og:title', !ogDesc && 'og:description', !ogImage && 'og:image'].filter(Boolean).join(', ')}`,
+        ? 'Nenhuma tag Open Graph encontrada — links compartilhados em redes sociais ficam sem preview'
+        : `Tags Open Graph parciais (${ogScore}/3). Faltando: ${[!ogTitle && 'og:title', !ogDesc && 'og:description', !ogImage && 'og:image'].filter(Boolean).join(', ')}`,
     points: 5,
   })
 
@@ -154,58 +154,61 @@ function checkContactForm($: cheerio.CheerioAPI): AuditCheck[] {
     const formText = ($form.attr('id') || '') + ($form.attr('class') || '') + ($form.attr('action') || '') + $form.text()
     const lowerText = formText.toLowerCase()
     return lowerText.includes('contact') ||
+      lowerText.includes('contato') ||
       lowerText.includes('enquir') ||
       lowerText.includes('inquir') ||
       lowerText.includes('get in touch') ||
+      lowerText.includes('fale conosco') ||
+      lowerText.includes('entre em contato') ||
       lowerText.includes('message') ||
+      lowerText.includes('mensagem') ||
       lowerText.includes('reach') ||
       ($form.find('input[type="email"]').length > 0 && $form.find('textarea').length > 0)
   })
 
-  // Also check for contact links
-  const contactLinks = $('a[href*="contact"], a[href*="mailto:"]').length > 0
   const hasContactPage = $('a').toArray().some(a => {
     const text = $(a).text().toLowerCase()
     const href = ($(a).attr('href') || '').toLowerCase()
-    return text.includes('contact') || href.includes('contact')
+    return text.includes('contact') || text.includes('contato') || text.includes('fale conosco') ||
+      href.includes('contact') || href.includes('contato')
   })
 
   checks.push({
-    category: 'Lead Capture',
-    name: 'Contact Form',
+    category: 'Captacao de Leads',
+    name: 'Formulario de Contato',
     passed: hasContactForm || hasContactPage,
     severity: 'critical',
     message: hasContactForm
-      ? 'Contact form detected on the page'
+      ? 'Formulario de contato detectado na pagina'
       : hasContactPage
-        ? 'Contact page link found, but no inline form on homepage — consider adding one'
-        : 'No contact form or contact page link found — you are losing potential leads',
+        ? 'Link para pagina de contato encontrado, mas sem formulario na homepage — considere adicionar um'
+        : 'Nenhum formulario de contato encontrado — voce esta perdendo leads potenciais',
     points: 12,
   })
 
   // Email link
   const hasEmail = $('a[href^="mailto:"]').length > 0
   checks.push({
-    category: 'Lead Capture',
-    name: 'Email Link',
+    category: 'Captacao de Leads',
+    name: 'Link de E-mail',
     passed: hasEmail,
     severity: 'warning',
     message: hasEmail
-      ? 'Clickable email link found'
-      : 'No clickable email link — make it easy for visitors to reach you',
+      ? 'Link de e-mail clicavel encontrado'
+      : 'Nenhum link de e-mail clicavel — facilite o contato dos visitantes',
     points: 3,
   })
 
   // Phone number
   const hasPhone = $('a[href^="tel:"]').length > 0
   checks.push({
-    category: 'Lead Capture',
-    name: 'Phone Number',
+    category: 'Captacao de Leads',
+    name: 'Numero de Telefone',
     passed: hasPhone,
     severity: 'warning',
     message: hasPhone
-      ? 'Clickable phone number found'
-      : 'No clickable phone link — mobile users expect tap-to-call',
+      ? 'Numero de telefone clicavel encontrado'
+      : 'Nenhum link de telefone clicavel — usuarios mobile esperam tocar para ligar',
     points: 3,
   })
 
@@ -220,13 +223,13 @@ function checkWhatsApp($: cheerio.CheerioAPI, html: string): AuditCheck[] {
     lowerHtml.includes('wa.me')
 
   return [{
-    category: 'Lead Capture',
-    name: 'WhatsApp Integration',
+    category: 'Captacao de Leads',
+    name: 'Integracao WhatsApp',
     passed: hasWhatsApp,
     severity: 'warning',
     message: hasWhatsApp
-      ? 'WhatsApp integration detected'
-      : 'No WhatsApp integration found — WhatsApp chat can increase conversions by up to 40%',
+      ? 'Integracao com WhatsApp detectada'
+      : 'Nenhuma integracao com WhatsApp encontrada — o WhatsApp pode aumentar conversoes em ate 40%',
     points: 8,
   }]
 }
@@ -234,11 +237,17 @@ function checkWhatsApp($: cheerio.CheerioAPI, html: string): AuditCheck[] {
 function checkCTA($: cheerio.CheerioAPI): AuditCheck[] {
   const checks: AuditCheck[] = []
 
-  // CTA buttons
-  const ctaKeywords = ['get started', 'sign up', 'buy', 'order', 'book', 'schedule', 'free', 'trial',
+  // CTA buttons (English + Portuguese keywords)
+  const ctaKeywords = [
+    'get started', 'sign up', 'buy', 'order', 'book', 'schedule', 'free', 'trial',
     'demo', 'quote', 'consultation', 'learn more', 'shop now', 'add to cart',
     'subscribe', 'join', 'download', 'register', 'apply', 'enquire', 'inquire',
-    'request', 'call now', 'contact us', 'get in touch', 'start']
+    'request', 'call now', 'contact us', 'get in touch', 'start',
+    'comecar', 'cadastre', 'comprar', 'pedir', 'agendar', 'gratis', 'teste',
+    'orcamento', 'consultoria', 'saiba mais', 'compre agora', 'adicionar ao carrinho',
+    'assinar', 'participar', 'baixar', 'registrar', 'solicitar', 'ligue agora',
+    'fale conosco', 'entre em contato', 'iniciar', 'quero', 'contratar'
+  ]
 
   const buttons = $('a, button').toArray()
   const ctaButtons = buttons.filter(el => {
@@ -249,19 +258,19 @@ function checkCTA($: cheerio.CheerioAPI): AuditCheck[] {
   })
 
   checks.push({
-    category: 'Conversion',
-    name: 'Call-to-Action Buttons',
+    category: 'Conversao',
+    name: 'Botoes de Acao (CTA)',
     passed: ctaButtons.length >= 1,
     severity: 'critical',
     message: ctaButtons.length === 0
-      ? 'No clear call-to-action buttons found — visitors need a clear next step'
+      ? 'Nenhum botao de acao claro encontrado — visitantes precisam de um proximo passo claro'
       : ctaButtons.length === 1
-        ? '1 CTA button found — consider adding more throughout the page'
-        : `${ctaButtons.length} CTA buttons found — good visibility`,
+        ? '1 botao de CTA encontrado — considere adicionar mais ao longo da pagina'
+        : `${ctaButtons.length} botoes de CTA encontrados — boa visibilidade`,
     points: 12,
   })
 
-  // Above-the-fold CTA (heuristic: check first 3 elements or hero-like sections)
+  // Above-the-fold CTA
   const heroSection = $('header, .hero, .banner, [class*="hero"], section:first-of-type').first()
   const heroCTA = heroSection.find('a, button').toArray().some(el => {
     const text = $(el).text().toLowerCase()
@@ -269,13 +278,13 @@ function checkCTA($: cheerio.CheerioAPI): AuditCheck[] {
   })
 
   checks.push({
-    category: 'Conversion',
-    name: 'Hero Section CTA',
+    category: 'Conversao',
+    name: 'CTA na Secao Principal',
     passed: heroCTA,
     severity: 'warning',
     message: heroCTA
-      ? 'CTA found in the hero/header area — visitors see it immediately'
-      : 'No CTA in the hero section — the first thing visitors see should have a clear action',
+      ? 'CTA encontrado na secao hero/header — visitantes veem imediatamente'
+      : 'Nenhum CTA na secao principal — a primeira coisa que visitantes veem deve ter uma acao clara',
     points: 5,
   })
 
@@ -289,16 +298,16 @@ function checkMobile($: cheerio.CheerioAPI): AuditCheck[] {
   const viewport = $('meta[name="viewport"]').attr('content') || ''
   checks.push({
     category: 'Mobile',
-    name: 'Viewport Meta Tag',
+    name: 'Tag Meta Viewport',
     passed: viewport.includes('width=device-width'),
     severity: 'critical',
     message: viewport.includes('width=device-width')
-      ? 'Viewport meta tag is properly configured'
-      : 'Missing or incorrect viewport meta tag — page will not render properly on mobile',
+      ? 'Tag meta viewport configurada corretamente'
+      : 'Tag meta viewport ausente ou incorreta — a pagina nao sera exibida corretamente no celular',
     points: 10,
   })
 
-  // Font size (check for very small text)
+  // Font size
   const hasSmallText = $('[style*="font-size"]').toArray().some(el => {
     const style = $(el).attr('style') || ''
     const match = style.match(/font-size:\s*(\d+)px/)
@@ -307,12 +316,12 @@ function checkMobile($: cheerio.CheerioAPI): AuditCheck[] {
 
   checks.push({
     category: 'Mobile',
-    name: 'Readable Font Sizes',
+    name: 'Tamanho de Fonte Legivel',
     passed: !hasSmallText,
     severity: 'info',
     message: hasSmallText
-      ? 'Some text appears to be smaller than 12px — may be hard to read on mobile'
-      : 'No obviously small font sizes detected in inline styles',
+      ? 'Algum texto parece ser menor que 12px — pode ser dificil de ler no celular'
+      : 'Nenhuma fonte obviamente pequena detectada nos estilos inline',
     points: 2,
   })
 
@@ -322,45 +331,42 @@ function checkMobile($: cheerio.CheerioAPI): AuditCheck[] {
 function checkPerformance($: cheerio.CheerioAPI, html: string): AuditCheck[] {
   const checks: AuditCheck[] = []
 
-  // HTTPS
-  // Checked via the final URL in the caller
-
   // Favicon
   const hasFavicon = $('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').length > 0
   checks.push({
-    category: 'Technical',
+    category: 'Tecnico',
     name: 'Favicon',
     passed: hasFavicon,
     severity: 'info',
     message: hasFavicon
-      ? 'Favicon is set'
-      : 'No favicon found — makes your site look unprofessional in browser tabs',
+      ? 'Favicon configurado'
+      : 'Nenhum favicon encontrado — faz seu site parecer pouco profissional nas abas do navegador',
     points: 2,
   })
 
   // Language attribute
   const hasLang = $('html').attr('lang')
   checks.push({
-    category: 'Technical',
-    name: 'Language Attribute',
+    category: 'Tecnico',
+    name: 'Atributo de Idioma',
     passed: !!hasLang,
     severity: 'info',
     message: hasLang
-      ? `Language set to "${hasLang}"`
-      : 'Missing lang attribute on <html> — helps accessibility and SEO',
+      ? `Idioma definido como "${hasLang}"`
+      : 'Atributo lang ausente no <html> — ajuda na acessibilidade e SEO',
     points: 2,
   })
 
-  // SSL check (basic)
+  // Mixed content
   const hasHttpLinks = $('a[href^="http://"], script[src^="http://"], link[href^="http://"], img[src^="http://"]').length
   checks.push({
-    category: 'Technical',
-    name: 'Mixed Content',
+    category: 'Tecnico',
+    name: 'Conteudo Misto',
     passed: hasHttpLinks === 0,
     severity: 'warning',
     message: hasHttpLinks === 0
-      ? 'No mixed content (HTTP resources on HTTPS page) detected'
-      : `${hasHttpLinks} resources loaded over insecure HTTP — browsers may block these`,
+      ? 'Nenhum conteudo misto (recursos HTTP em pagina HTTPS) detectado'
+      : `${hasHttpLinks} recursos carregados via HTTP inseguro — navegadores podem bloquear`,
     points: 3,
   })
 
@@ -373,16 +379,15 @@ export async function POST(request: NextRequest) {
     const { url: rawUrl } = body
 
     if (!rawUrl || typeof rawUrl !== 'string') {
-      return NextResponse.json({ error: 'URL is required' }, { status: 400 })
+      return NextResponse.json({ error: 'URL e obrigatoria' }, { status: 400 })
     }
 
     const url = normalizeUrl(rawUrl)
 
-    // Validate URL format
     try {
       new URL(url)
     } catch {
-      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 })
+      return NextResponse.json({ error: 'Formato de URL invalido' }, { status: 400 })
     }
 
     const startTime = Date.now()
@@ -394,16 +399,15 @@ export async function POST(request: NextRequest) {
       html = result.html
       finalUrl = result.finalUrl
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
+      const message = err instanceof Error ? err.message : 'Erro desconhecido'
       return NextResponse.json({
-        error: `Could not reach the website. ${message.includes('abort') ? 'The site took too long to respond.' : 'Please check the URL and try again.'}`,
+        error: `Nao foi possivel acessar o site. ${message.includes('abort') ? 'O site demorou muito para responder.' : 'Verifique a URL e tente novamente.'}`,
       }, { status: 422 })
     }
 
     const $ = cheerio.load(html)
     const auditTime = Date.now() - startTime
 
-    // Run all checks
     const allChecks: AuditCheck[] = [
       ...checkSEO($, url),
       ...checkContactForm($),
@@ -413,32 +417,28 @@ export async function POST(request: NextRequest) {
       ...checkPerformance($, html),
     ]
 
-    // Calculate score
     const totalPoints = allChecks.reduce((sum, c) => sum + c.points, 0)
     const earnedPoints = allChecks.filter(c => c.passed).reduce((sum, c) => sum + c.points, 0)
     const score = Math.round((earnedPoints / totalPoints) * 100)
 
-    // Check if site uses HTTPS
     const usesHttps = finalUrl.startsWith('https://')
     allChecks.push({
-      category: 'Technical',
+      category: 'Tecnico',
       name: 'HTTPS / SSL',
       passed: usesHttps,
       severity: 'critical',
       message: usesHttps
-        ? 'Site is served over HTTPS — secure connection'
-        : 'Site is not using HTTPS — browsers will warn visitors the site is insecure',
-      points: 0, // Already counted in total
+        ? 'Site servido via HTTPS — conexao segura'
+        : 'Site nao usa HTTPS — navegadores vao avisar que o site e inseguro',
+      points: 0,
     })
 
-    // Group by category
     const categories = allChecks.reduce((acc, check) => {
       if (!acc[check.category]) acc[check.category] = []
       acc[check.category].push(check)
       return acc
     }, {} as Record<string, AuditCheck[]>)
 
-    // Summary stats
     const passed = allChecks.filter(c => c.passed).length
     const failed = allChecks.filter(c => !c.passed).length
     const critical = allChecks.filter(c => !c.passed && c.severity === 'critical').length
@@ -452,7 +452,7 @@ export async function POST(request: NextRequest) {
       checks: allChecks,
     })
   } catch (err: unknown) {
-    console.error('Audit error:', err)
-    return NextResponse.json({ error: 'An unexpected error occurred during the audit' }, { status: 500 })
+    console.error('Erro na auditoria:', err)
+    return NextResponse.json({ error: 'Ocorreu um erro inesperado durante a auditoria' }, { status: 500 })
   }
 }
