@@ -71,6 +71,7 @@ const categoryLabels: Record<string, string> = {
   'Captacao de Leads': 'Captacao de Leads',
   'Conversao': 'Conversao',
   'Mobile': 'Mobile',
+  'Visibilidade IA': 'Visibilidade IA',
   'Tecnico': 'Tecnico',
 }
 

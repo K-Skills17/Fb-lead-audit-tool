@@ -328,6 +328,166 @@ function checkMobile($: cheerio.CheerioAPI): AuditCheck[] {
   return checks
 }
 
+function checkAIVisibility($: cheerio.CheerioAPI, html: string, finalUrl: string): AuditCheck[] {
+  const checks: AuditCheck[] = []
+
+  // 1. Structured Data (JSON-LD / Schema.org)
+  const jsonLdScripts = $('script[type="application/ld+json"]')
+  const hasStructuredData = jsonLdScripts.length > 0
+  let structuredTypes: string[] = []
+  jsonLdScripts.each((_, el) => {
+    try {
+      const data = JSON.parse($(el).html() || '')
+      const type = data['@type'] || (Array.isArray(data['@graph']) ? data['@graph'].map((g: Record<string, string>) => g['@type']).join(', ') : '')
+      if (type) structuredTypes.push(type)
+    } catch { /* invalid JSON-LD */ }
+  })
+
+  // Also check for microdata
+  const hasMicrodata = $('[itemscope]').length > 0
+
+  checks.push({
+    category: 'Visibilidade IA',
+    name: 'Dados Estruturados (Schema.org)',
+    passed: hasStructuredData || hasMicrodata,
+    severity: 'critical',
+    message: hasStructuredData
+      ? `Dados estruturados encontrados (JSON-LD): ${structuredTypes.slice(0, 3).join(', ')}${structuredTypes.length > 3 ? '...' : ''}`
+      : hasMicrodata
+        ? 'Microdata encontrado — considere tambem usar JSON-LD para melhor compatibilidade com IA'
+        : 'Nenhum dado estruturado encontrado — IAs como ChatGPT e Google AI usam Schema.org para entender seu conteudo',
+    points: 10,
+  })
+
+  // 2. FAQ Schema
+  let hasFaqSchema = false
+  jsonLdScripts.each((_, el) => {
+    try {
+      const data = JSON.parse($(el).html() || '')
+      const type = data['@type'] || ''
+      if (type === 'FAQPage' || (Array.isArray(data['@graph']) && data['@graph'].some((g: Record<string, string>) => g['@type'] === 'FAQPage'))) {
+        hasFaqSchema = true
+      }
+    } catch { /* skip */ }
+  })
+
+  // Also check for visible FAQ sections
+  const hasFaqSection = $('h1, h2, h3, h4').toArray().some(el => {
+    const text = $(el).text().toLowerCase()
+    return text.includes('faq') || text.includes('perguntas frequentes') || text.includes('frequently asked') || text.includes('duvidas')
+  })
+
+  checks.push({
+    category: 'Visibilidade IA',
+    name: 'Secao de FAQ',
+    passed: hasFaqSchema || hasFaqSection,
+    severity: 'warning',
+    message: hasFaqSchema
+      ? 'FAQ com Schema.org detectado — IAs conseguem extrair perguntas e respostas diretamente'
+      : hasFaqSection
+        ? 'Secao de FAQ encontrada, mas sem Schema FAQPage — adicione dados estruturados para melhor visibilidade em IA'
+        : 'Nenhuma secao de FAQ encontrada — perguntas e respostas sao o conteudo mais citado por IAs',
+    points: 8,
+  })
+
+  // 3. Heading hierarchy (clear content structure)
+  const h1 = $('h1').length
+  const h2 = $('h2').length
+  const h3 = $('h3').length
+  const hasGoodHierarchy = h1 >= 1 && h2 >= 2
+
+  checks.push({
+    category: 'Visibilidade IA',
+    name: 'Hierarquia de Conteudo',
+    passed: hasGoodHierarchy,
+    severity: 'warning',
+    message: hasGoodHierarchy
+      ? `Boa estrutura de headings: ${h1} H1, ${h2} H2, ${h3} H3 — IAs conseguem navegar seu conteudo facilmente`
+      : h2 < 2
+        ? `Poucos subtitulos (${h2} H2) — adicione mais headings H2/H3 para que IAs entendam a estrutura do conteudo`
+        : 'Estrutura de headings precisa ser melhorada para leitura por IA',
+    points: 7,
+  })
+
+  // 4. About / Authority page
+  const hasAboutPage = $('a').toArray().some(a => {
+    const text = $(a).text().toLowerCase()
+    const href = ($(a).attr('href') || '').toLowerCase()
+    return text.includes('sobre') || text.includes('about') || text.includes('quem somos') ||
+      href.includes('/sobre') || href.includes('/about') || href.includes('/quem-somos')
+  })
+
+  // Check for author/organization schema
+  let hasAuthorSchema = false
+  jsonLdScripts.each((_, el) => {
+    try {
+      const raw = $(el).html() || ''
+      if (raw.includes('Organization') || raw.includes('Person') || raw.includes('LocalBusiness')) {
+        hasAuthorSchema = true
+      }
+    } catch { /* skip */ }
+  })
+
+  checks.push({
+    category: 'Visibilidade IA',
+    name: 'Autoridade e Credibilidade',
+    passed: hasAboutPage || hasAuthorSchema,
+    severity: 'warning',
+    message: hasAuthorSchema && hasAboutPage
+      ? 'Pagina "Sobre" e Schema de organizacao encontrados — fortalece credibilidade para citacoes por IA'
+      : hasAboutPage
+        ? 'Pagina "Sobre" encontrada — adicione Schema Organization/LocalBusiness para reforcar autoridade'
+        : hasAuthorSchema
+          ? 'Schema de organizacao encontrado, mas sem pagina "Sobre" visivel'
+          : 'Nenhuma pagina "Sobre" ou Schema de autoridade — IAs priorizam fontes com credibilidade clara',
+    points: 5,
+  })
+
+  // 5. Sitemap check (fetch /sitemap.xml)
+  // We check for sitemap reference in HTML or robots meta
+  const hasSitemapLink = html.toLowerCase().includes('sitemap.xml') ||
+    $('link[rel="sitemap"]').length > 0
+
+  checks.push({
+    category: 'Visibilidade IA',
+    name: 'Sitemap XML',
+    passed: hasSitemapLink,
+    severity: 'info',
+    message: hasSitemapLink
+      ? 'Referencia ao sitemap.xml encontrada — ajuda bots de IA a descobrir todo o conteudo'
+      : 'Nenhuma referencia ao sitemap.xml encontrada — crie um sitemap para que bots de IA indexem todas as paginas',
+    points: 5,
+  })
+
+  // 6. AI bot access (check for meta robots blocking)
+  const robotsMeta = $('meta[name="robots"]').attr('content')?.toLowerCase() || ''
+  const hasNoIndex = robotsMeta.includes('noindex')
+  const hasNoFollow = robotsMeta.includes('nofollow')
+
+  // Check for AI-specific blocking meta tags
+  const gptBotMeta = $('meta[name="GPTBot"], meta[name="gptbot"]').attr('content')?.toLowerCase() || ''
+  const claudeBotMeta = $('meta[name="ClaudeBot"], meta[name="claudebot"]').attr('content')?.toLowerCase() || ''
+  const blocksAI = gptBotMeta.includes('noindex') || claudeBotMeta.includes('noindex') ||
+    gptBotMeta.includes('nofollow') || claudeBotMeta.includes('nofollow')
+
+  checks.push({
+    category: 'Visibilidade IA',
+    name: 'Acesso de Bots de IA',
+    passed: !hasNoIndex && !blocksAI,
+    severity: 'critical',
+    message: blocksAI
+      ? 'Bots de IA (GPTBot/ClaudeBot) estao sendo bloqueados — seu site nao aparecera em respostas de IA'
+      : hasNoIndex
+        ? 'Meta robots com "noindex" — buscadores e IAs nao vao indexar esta pagina'
+        : hasNoFollow
+          ? 'Meta robots com "nofollow" — bots nao seguirao links, mas a pagina pode ser indexada'
+          : 'Nenhum bloqueio de bots de IA detectado — seu conteudo esta acessivel para indexacao por IA',
+    points: 8,
+  })
+
+  return checks
+}
+
 function checkPerformance($: cheerio.CheerioAPI, html: string): AuditCheck[] {
   const checks: AuditCheck[] = []
 
@@ -414,6 +574,7 @@ export async function POST(request: NextRequest) {
       ...checkWhatsApp($, html),
       ...checkCTA($),
       ...checkMobile($),
+      ...checkAIVisibility($, html, finalUrl),
       ...checkPerformance($, html),
     ]
 
