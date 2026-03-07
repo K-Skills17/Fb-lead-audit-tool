@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { trackAuditSubmit } from '@/lib/analytics'
 
 export default function Home() {
   const [url, setUrl] = useState('')
@@ -15,6 +16,7 @@ export default function Home() {
 
     setLoading(true)
     setError('')
+    trackAuditSubmit(url.trim())
 
     try {
       const res = await fetch('/api/audit', {
