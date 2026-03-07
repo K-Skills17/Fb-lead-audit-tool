@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { trackAuditResult, trackWhatsAppClick, trackCalendlyClick, trackShareCopy } from '@/lib/analytics'
 
 interface AuditCheck {
   category: string
@@ -420,6 +421,7 @@ function ReportContent() {
         try {
           const data = JSON.parse(cached)
           setResult(data)
+          trackAuditResult(data.url, data.score)
           setLoading(false)
           sessionStorage.removeItem('auditResult')
           return
@@ -437,6 +439,7 @@ function ReportContent() {
           setError(data.error || 'A auditoria falhou')
         } else {
           setResult(data)
+          trackAuditResult(data.url, data.score)
         }
       } catch {
         setError('Falha ao carregar a auditoria. Tente novamente.')
@@ -497,6 +500,7 @@ function ReportContent() {
   function handleCopy() {
     navigator.clipboard.writeText(shareUrl)
     setCopied(true)
+    trackShareCopy(result?.url || '')
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -605,6 +609,7 @@ function ReportContent() {
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick(result.score)}
                 className="inline-flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a]
                   text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all
                   shadow-lg hover:shadow-xl hover:-translate-y-0.5"
@@ -619,6 +624,7 @@ function ReportContent() {
                 href={calendlyLink}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackCalendlyClick(result.score)}
                 className="inline-flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20
                   text-white border border-white/30 px-8 py-4 rounded-xl text-lg font-semibold transition-all
                   hover:-translate-y-0.5"
