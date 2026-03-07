@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { google } from 'googleapis'
 
 interface SendRequest {
   name: string
@@ -11,17 +12,13 @@ interface SendRequest {
 }
 
 function formatPhone(phone: string): string {
-  // Remove everything except digits
   const digits = phone.replace(/\D/g, '')
-  // If it starts with 55, keep it. Otherwise prepend 55 (Brazil)
   if (digits.startsWith('55') && digits.length >= 12) {
     return digits
   }
-  // If 11 digits (DDD + 9-digit mobile), prepend 55
   if (digits.length === 11) {
     return '55' + digits
   }
-  // If 10 digits (DDD + 8-digit landline), prepend 55
   if (digits.length === 10) {
     return '55' + digits
   }
@@ -51,6 +48,54 @@ function buildMessage(data: SendRequest): string {
   ].filter(line => line !== undefined).join('\n')
 }
 
+// --- Google Sheets ---
+
+async function appendToSheet(data: SendRequest) {
+  const sheetId = process.env.GOOGLE_SHEET_ID
+  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+
+  if (!sheetId || !clientEmail || !privateKey) {
+    console.warn('Google Sheets not configured — skipping lead storage')
+    return
+  }
+
+  try {
+    const auth = new google.auth.JWT({
+      email: clientEmail,
+      key: privateKey,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    })
+
+    const sheets = google.sheets({ version: 'v4', auth })
+
+    const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    const issues = data.topIssues.join(', ')
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: sheetId,
+      range: 'Sheet1!A:G',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[
+          now,
+          data.name,
+          data.phone,
+          data.clinicName,
+          data.siteUrl,
+          data.score,
+          issues,
+        ]],
+      },
+    })
+  } catch (err) {
+    console.error('Google Sheets error:', err)
+    // Don't block the flow
+  }
+}
+
+// --- Main handler ---
+
 export async function POST(request: NextRequest) {
   try {
     const body: SendRequest = await request.json()
@@ -67,37 +112,50 @@ export async function POST(request: NextRequest) {
 
     const message = buildMessage({ name, phone, clinicName, siteUrl, score, topIssues, reportUrl })
 
+    // Save lead to Google Sheets (non-blocking)
+    const sheetPromise = appendToSheet(body)
+
+    // Send WhatsApp message via Evolution API
+    let messageSent = false
     const apiUrl = process.env.EVOLUTION_API_URL
     const instance = process.env.EVOLUTION_API_INSTANCE
     const apiKey = process.env.EVOLUTION_API_KEY
 
-    if (!apiUrl || !instance || !apiKey) {
+    if (apiUrl && instance && apiKey) {
+      try {
+        const evolutionRes = await fetch(`${apiUrl}/message/sendText/${instance}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': apiKey,
+          },
+          body: JSON.stringify({
+            number: formattedPhone,
+            textMessage: {
+              text: message,
+            },
+          }),
+        })
+
+        if (evolutionRes.ok) {
+          messageSent = true
+        } else {
+          const errText = await evolutionRes.text()
+          console.error('Evolution API error:', evolutionRes.status, errText)
+        }
+      } catch (err) {
+        console.error('Evolution API fetch error:', err)
+      }
+    } else {
       console.error('Evolution API environment variables not configured')
-      return NextResponse.json({ error: 'Servico de mensagens nao configurado' }, { status: 500 })
     }
 
-    const evolutionRes = await fetch(`${apiUrl}/message/sendText/${instance}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': apiKey,
-      },
-      body: JSON.stringify({
-        number: formattedPhone,
-        text: message,
-      }),
-    })
+    // Wait for sheet write to finish
+    await sheetPromise
 
-    if (!evolutionRes.ok) {
-      const errText = await evolutionRes.text()
-      console.error('Evolution API error:', evolutionRes.status, errText)
-      // Don't block the user from seeing their report even if message fails
-      return NextResponse.json({ success: true, messageSent: false, warning: 'Relatorio pronto, mas nao conseguimos enviar a mensagem' })
-    }
-
-    return NextResponse.json({ success: true, messageSent: true })
+    return NextResponse.json({ success: true, messageSent })
   } catch (err) {
-    console.error('Error sending WhatsApp:', err)
-    return NextResponse.json({ success: true, messageSent: false, warning: 'Erro ao enviar mensagem' })
+    console.error('Error in send-whatsapp:', err)
+    return NextResponse.json({ success: true, messageSent: false })
   }
 }
