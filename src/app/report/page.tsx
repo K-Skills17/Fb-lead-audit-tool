@@ -397,6 +397,171 @@ function QuickSummaryCards({ result }: { result: AuditResult }) {
   )
 }
 
+// --- Lead Capture Gate ---
+
+function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComplete: () => void }) {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [clinicName, setClinicName] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+
+  function formatPhoneInput(value: string) {
+    const digits = value.replace(/\D/g, '').slice(0, 11)
+    if (digits.length <= 2) return digits
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const digits = phone.replace(/\D/g, '')
+    if (!name.trim() || digits.length < 10 || !clinicName.trim()) {
+      setFormError('Preencha todos os campos corretamente.')
+      return
+    }
+
+    setSubmitting(true)
+    setFormError('')
+
+    const reportUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/report?url=${encodeURIComponent(result.url)}`
+      : ''
+
+    const topIssues = result.checks
+      .filter(c => !c.passed && c.severity === 'critical')
+      .slice(0, 5)
+      .map(c => friendlyCheckNames[c.name] || c.name)
+
+    try {
+      await fetch('/api/send-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: digits,
+          clinicName: clinicName.trim(),
+          siteUrl: result.url,
+          score: result.score,
+          topIssues,
+          reportUrl,
+        }),
+      })
+    } catch {
+      // Don't block the user even if message fails
+    }
+
+    onComplete()
+  }
+
+  const scoreColor = result.score >= 80 ? '#22c55e' : result.score >= 50 ? '#f59e0b' : '#ef4444'
+
+  return (
+    <div className="min-h-screen gradient-bg flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Score teaser */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 mb-4"
+            style={{ borderColor: scoreColor }}>
+            <span className="text-3xl font-bold" style={{ color: scoreColor }}>{result.score}</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            Sua analise esta pronta!
+          </h1>
+          <p className="text-slate-300 text-lg">
+            Seu site tirou <strong style={{ color: scoreColor }}>{result.score}/100</strong>.
+            {result.summary.critical > 0 && (
+              <span className="text-red-300"> Encontramos {result.summary.critical} problema{result.summary.critical > 1 ? 's' : ''} importante{result.summary.critical > 1 ? 's' : ''}.</span>
+            )}
+          </p>
+          <p className="text-slate-400 text-sm mt-2">
+            Preencha abaixo para ver o relatorio completo. Enviaremos tambem uma copia no seu WhatsApp.
+          </p>
+        </div>
+
+        {/* Form card */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-5">
+          <div>
+            <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Seu nome
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Maria Silva"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800
+                placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              disabled={submitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-1.5">
+              WhatsApp / Telefone
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+              placeholder="(11) 99999-9999"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800
+                placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              disabled={submitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="clinic" className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Nome da clinica
+            </label>
+            <input
+              id="clinic"
+              type="text"
+              value={clinicName}
+              onChange={(e) => setClinicName(e.target.value)}
+              placeholder="Ex: Clinica Sorriso"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800
+                placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              disabled={submitting}
+            />
+          </div>
+
+          {formError && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{formError}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full gradient-accent text-white py-4 rounded-xl text-lg font-semibold
+              hover:opacity-90 transition-all disabled:opacity-60 disabled:cursor-not-allowed
+              shadow-lg"
+          >
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Liberando relatorio...
+              </span>
+            ) : (
+              'Ver Meu Relatorio Completo'
+            )}
+          </button>
+
+          <p className="text-xs text-center text-slate-400">
+            Seus dados ficam seguros. Usamos apenas para enviar o relatorio.
+          </p>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // --- Main Report ---
 
 function ReportContent() {
@@ -406,6 +571,7 @@ function ReportContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [leadCaptured, setLeadCaptured] = useState(false)
 
   const urlParam = searchParams.get('url')
 
@@ -421,7 +587,6 @@ function ReportContent() {
         try {
           const data = JSON.parse(cached)
           setResult(data)
-          trackAuditResult(data.url, data.score)
           setLoading(false)
           sessionStorage.removeItem('auditResult')
           return
@@ -439,7 +604,6 @@ function ReportContent() {
           setError(data.error || 'A auditoria falhou')
         } else {
           setResult(data)
-          trackAuditResult(data.url, data.score)
         }
       } catch {
         setError('Falha ao carregar a auditoria. Tente novamente.')
@@ -486,6 +650,19 @@ function ReportContent() {
   }
 
   if (!result) return null
+
+  // Show lead capture form before revealing the report
+  if (!leadCaptured) {
+    return (
+      <LeadCaptureForm
+        result={result}
+        onComplete={() => {
+          setLeadCaptured(true)
+          trackAuditResult(result.url, result.score)
+        }}
+      />
+    )
+  }
 
   const shareUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/report?url=${encodeURIComponent(urlParam || '')}`
