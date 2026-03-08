@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { trackAuditResult, trackWhatsAppClick, trackCalendlyClick, trackShareCopy } from '@/lib/analytics'
+import { trackAuditResult, trackLeadCapture, trackWhatsAppClick, trackCalendlyClick, trackShareCopy } from '@/lib/analytics'
 
 interface AuditCheck {
   category: string
@@ -451,6 +451,7 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
       // Don't block the user even if message fails
     }
 
+    trackLeadCapture(clinicName.trim(), result.score)
     onComplete()
   }
 
