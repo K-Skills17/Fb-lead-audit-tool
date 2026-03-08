@@ -38,8 +38,8 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* Meta Pixel (Facebook) */}
-        <Script id="meta-pixel-init" strategy="afterInteractive">
+        {/* Meta Pixel (Facebook) — loads FIRST, before page hydration */}
+        <Script id="meta-pixel-init" strategy="beforeInteractive">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
