@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
+import Anthropic from '@anthropic-ai/sdk'
+
+interface AuditCheck {
+  category: string
+  name: string
+  passed: boolean
+  severity: 'critical' | 'warning' | 'info'
+  message: string
+  points: number
+}
 
 interface SendRequest {
   name: string
@@ -8,6 +18,7 @@ interface SendRequest {
   siteUrl: string
   score: number
   topIssues: string[]
+  checks: AuditCheck[]
   reportUrl: string
 }
 
@@ -25,27 +36,111 @@ function formatPhone(phone: string): string {
   return digits
 }
 
-function buildMessage(data: SendRequest): string {
-  const issuesList = data.topIssues
-    .slice(0, 5)
-    .map((issue, i) => `   ${i + 1}. ${issue}`)
+// --- Claude AI analysis ---
+
+async function generateActionPlan(data: SendRequest): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    console.warn('ANTHROPIC_API_KEY not configured — skipping AI analysis')
+    return null
+  }
+
+  const failedChecks = data.checks
+    .filter(c => !c.passed)
+    .map(c => `- [${c.severity.toUpperCase()}] ${c.name}: ${c.message}`)
     .join('\n')
 
-  return [
+  const passedChecks = data.checks
+    .filter(c => c.passed)
+    .map(c => `- ${c.name}: ${c.message}`)
+    .join('\n')
+
+  const client = new Anthropic({ apiKey })
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1024,
+    messages: [
+      {
+        role: 'user',
+        content: `Voce e um consultor de marketing digital especializado em clinicas e negocios locais no Brasil. Analise os resultados dessa auditoria de site e crie um plano de acao personalizado.
+
+DADOS DO LEAD:
+- Nome: ${data.name}
+- Clinica: ${data.clinicName}
+- Site: ${data.siteUrl}
+- Nota: ${data.score}/100
+
+PROBLEMAS ENCONTRADOS:
+${failedChecks || 'Nenhum problema critico encontrado.'}
+
+O QUE ESTA BOM:
+${passedChecks || 'Nenhum item aprovado.'}
+
+INSTRUCOES:
+- Escreva em portugues brasileiro, tom profissional mas amigavel
+- Maximo 3-4 acoes prioritarias, cada uma com 1-2 frases curtas
+- Foque nas acoes que trariam mais pacientes/clientes
+- Seja especifico para o contexto de clinica/negocio local
+- NAO use markdown. Use formatacao WhatsApp: *negrito* para destaques
+- Mantenha CURTO — maximo 400 caracteres no total do plano
+- Retorne APENAS o plano de acao, sem introducao ou conclusao`
+      }
+    ]
+  })
+
+  const textBlock = response.content.find(b => b.type === 'text')
+  return textBlock ? textBlock.text : null
+}
+
+// --- Message builder ---
+
+function buildMessage(data: SendRequest, actionPlan: string | null): string {
+  const lines: string[] = [
     `Ola ${data.name}! 👋`,
     ``,
-    `Obrigado por usar nosso audit de sites. Aqui esta o resultado da analise do site da *${data.clinicName}*:`,
+    `Aqui esta a analise completa do site da *${data.clinicName}*:`,
     ``,
     `🏆 *Nota: ${data.score}/100*`,
+  ]
+
+  if (actionPlan) {
+    lines.push(
+      ``,
+      `📋 *Seu plano de acao personalizado:*`,
+      ``,
+      actionPlan,
+    )
+  } else {
+    // Fallback: show top issues if AI is not available
+    const issuesList = data.topIssues
+      .slice(0, 5)
+      .map((issue, i) => `   ${i + 1}. ${issue}`)
+      .join('\n')
+
+    if (data.topIssues.length > 0) {
+      lines.push(
+        ``,
+        `⚠️ *Principais pontos para melhorar:*`,
+        issuesList,
+      )
+    }
+  }
+
+  lines.push(
     ``,
-    data.topIssues.length > 0 ? `⚠️ *Principais pontos para melhorar:*` : '',
-    data.topIssues.length > 0 ? issuesList : '',
-    data.topIssues.length > 0 ? `` : '',
     `📊 *Relatorio completo:*`,
     data.reportUrl,
     ``,
-    `Se quiser, podemos te ajudar a corrigir tudo isso e atrair mais pacientes para a ${data.clinicName}. E so responder essa mensagem! 😊`,
-  ].filter(line => line !== undefined).join('\n')
+    `---`,
+    ``,
+    `Quer corrigir esses pontos e atrair mais pacientes para a *${data.clinicName}*?`,
+    ``,
+    `👉 Responda *QUERO* para falar com um especialista`,
+    `👉 Responda *AGENDAR* para marcar uma consultoria gratuita`,
+  )
+
+  return lines.join('\n')
 }
 
 // --- Google Sheets ---
@@ -90,7 +185,6 @@ async function appendToSheet(data: SendRequest) {
     })
   } catch (err) {
     console.error('Google Sheets error:', err)
-    // Don't block the flow
   }
 }
 
@@ -99,7 +193,7 @@ async function appendToSheet(data: SendRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body: SendRequest = await request.json()
-    const { name, phone, clinicName, siteUrl, score, topIssues, reportUrl } = body
+    const { name, phone, clinicName } = body
 
     if (!name || !phone || !clinicName) {
       return NextResponse.json({ error: 'Nome, telefone e nome da clinica sao obrigatorios' }, { status: 400 })
@@ -110,10 +204,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Numero de telefone invalido' }, { status: 400 })
     }
 
-    const message = buildMessage({ name, phone, clinicName, siteUrl, score, topIssues, reportUrl })
+    // Run AI analysis and sheet save in parallel
+    const [actionPlan] = await Promise.all([
+      generateActionPlan(body).catch(err => {
+        console.error('Claude AI error:', err)
+        return null
+      }),
+      appendToSheet(body),
+    ])
 
-    // Save lead to Google Sheets (non-blocking)
-    const sheetPromise = appendToSheet(body)
+    const message = buildMessage(body, actionPlan)
 
     // Send WhatsApp message via Evolution API
     let messageSent = false
@@ -149,9 +249,6 @@ export async function POST(request: NextRequest) {
     } else {
       console.error('Evolution API environment variables not configured')
     }
-
-    // Wait for sheet write to finish
-    await sheetPromise
 
     return NextResponse.json({ success: true, messageSent })
   } catch (err) {

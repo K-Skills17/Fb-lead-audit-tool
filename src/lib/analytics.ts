@@ -35,16 +35,30 @@ function fbq(...args: unknown[]) {
 
 // ---------- Tracking events ----------
 
-/** User submits the audit form on the home page */
+/** User submits the audit form on the home page (interest, not a lead yet) */
 export function trackAuditSubmit(url: string) {
   gtag('event', 'audit_submit', {
     event_category: 'engagement',
     event_label: url,
   })
-  fbq('track', 'Lead', {
+  fbq('track', 'ViewContent', {
     content_name: 'Audit Submit',
     content_category: 'audit',
     value: url,
+  })
+}
+
+/** User fills in contact info on the lead capture form (real lead) */
+export function trackLeadCapture(clinicName: string, score: number) {
+  gtag('event', 'lead_capture', {
+    event_category: 'conversion',
+    event_label: clinicName,
+    value: score,
+  })
+  fbq('track', 'Lead', {
+    content_name: clinicName,
+    content_category: 'audit',
+    value: score,
   })
 }
 
