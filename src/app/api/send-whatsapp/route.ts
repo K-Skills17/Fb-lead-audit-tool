@@ -136,8 +136,7 @@ function buildMessage(data: SendRequest, actionPlan: string | null): string {
     ``,
     `Quer corrigir esses pontos e atrair mais pacientes para a *${data.clinicName}*?`,
     ``,
-    `👉 Responda *QUERO* para falar com um especialista`,
-    `👉 Responda *AGENDAR* para marcar uma consultoria gratuita`,
+    `Me conta: qual desses pontos voce sente que mais impacta o seu negocio hoje? 😊`,
   )
 
   return lines.join('\n')
