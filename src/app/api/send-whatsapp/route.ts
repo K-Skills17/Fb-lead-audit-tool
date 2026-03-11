@@ -220,9 +220,14 @@ export async function POST(request: NextRequest) {
     const instance = process.env.EVOLUTION_API_INSTANCE
     const apiKey = process.env.EVOLUTION_API_KEY
 
+    let whatsappError = ''
+
     if (apiUrl && instance && apiKey) {
       try {
-        const evolutionRes = await fetch(`${apiUrl}/message/sendText/${instance}`, {
+        const evoUrl = `${apiUrl}/message/sendText/${instance}`
+        console.log('Evolution API request:', { url: evoUrl, phone: formattedPhone })
+
+        const evolutionRes = await fetch(evoUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -236,20 +241,25 @@ export async function POST(request: NextRequest) {
           }),
         })
 
+        const responseText = await evolutionRes.text()
+        console.log('Evolution API response:', evolutionRes.status, responseText)
+
         if (evolutionRes.ok) {
           messageSent = true
         } else {
-          const errText = await evolutionRes.text()
-          console.error('Evolution API error:', evolutionRes.status, errText)
+          whatsappError = `Evolution API ${evolutionRes.status}: ${responseText}`
+          console.error('Evolution API error:', whatsappError)
         }
       } catch (err) {
+        whatsappError = `Fetch error: ${err instanceof Error ? err.message : String(err)}`
         console.error('Evolution API fetch error:', err)
       }
     } else {
-      console.error('Evolution API environment variables not configured')
+      whatsappError = `Missing env vars: URL=${!!apiUrl}, INSTANCE=${!!instance}, KEY=${!!apiKey}`
+      console.error('Evolution API not configured:', whatsappError)
     }
 
-    return NextResponse.json({ success: true, messageSent })
+    return NextResponse.json({ success: true, messageSent, whatsappError: messageSent ? undefined : whatsappError })
   } catch (err) {
     console.error('Error in send-whatsapp:', err)
     return NextResponse.json({ success: true, messageSent: false })

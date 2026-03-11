@@ -434,7 +434,7 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
       .map(c => friendlyCheckNames[c.name] || c.name)
 
     try {
-      await fetch('/api/send-whatsapp', {
+      const res = await fetch('/api/send-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -448,8 +448,12 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
           reportUrl,
         }),
       })
-    } catch {
-      // Don't block the user even if message fails
+      const data = await res.json()
+      if (data.whatsappError) {
+        console.warn('WhatsApp send failed:', data.whatsappError)
+      }
+    } catch (err) {
+      console.warn('WhatsApp API call failed:', err)
     }
 
     trackLeadCapture(clinicName.trim(), result.score)
