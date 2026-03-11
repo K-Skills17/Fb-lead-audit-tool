@@ -235,9 +235,7 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             number: formattedPhone,
-            textMessage: {
-              text: message,
-            },
+            text: message,
           }),
         })
 
