@@ -214,47 +214,99 @@ export async function POST(request: NextRequest) {
 
     const message = buildMessage(body, actionPlan)
 
-    // Send WhatsApp message via Evolution API
+    // Send via LK Chatbot webhook (preferred — gives chatbot conversation context)
+    // Falls back to direct Evolution API if chatbot webhook is not configured or fails
     let messageSent = false
-    const apiUrl = process.env.EVOLUTION_API_URL
-    const instance = process.env.EVOLUTION_API_INSTANCE
-    const apiKey = process.env.EVOLUTION_API_KEY
-
     let whatsappError = ''
 
-    if (apiUrl && instance && apiKey) {
-      try {
-        const evoUrl = `${apiUrl}/message/sendText/${instance}`
-        console.log('Evolution API request:', { url: evoUrl, phone: formattedPhone })
+    const chatbotUrl = process.env.LK_CHATBOT_URL
+    const chatbotApiKey = process.env.LK_CHATBOT_API_KEY
+    const chatbotTenantId = process.env.LK_CHATBOT_TENANT_ID
 
-        const evolutionRes = await fetch(evoUrl, {
+    if (chatbotUrl && chatbotApiKey && chatbotTenantId) {
+      try {
+        const webhookUrl = `${chatbotUrl}/webhook/audit-lead`
+        console.log('Chatbot webhook request:', { url: webhookUrl, phone: formattedPhone })
+
+        const chatbotRes = await fetch(webhookUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': apiKey,
+            'apikey': chatbotApiKey,
           },
           body: JSON.stringify({
-            number: formattedPhone,
-            text: message,
+            phone: formattedPhone,
+            name: body.name,
+            reportMessage: message,
+            tenantId: chatbotTenantId,
+            auditData: {
+              siteUrl: body.siteUrl,
+              overallScore: body.score,
+              keyFindings: body.topIssues.slice(0, 5),
+              recommendations: body.checks
+                .filter(c => !c.passed)
+                .slice(0, 5)
+                .map(c => c.message),
+            },
           }),
         })
 
-        const responseText = await evolutionRes.text()
-        console.log('Evolution API response:', evolutionRes.status, responseText)
+        const responseText = await chatbotRes.text()
+        console.log('Chatbot webhook response:', chatbotRes.status, responseText)
 
-        if (evolutionRes.ok) {
+        if (chatbotRes.ok) {
           messageSent = true
         } else {
-          whatsappError = `Evolution API ${evolutionRes.status}: ${responseText}`
-          console.error('Evolution API error:', whatsappError)
+          whatsappError = `Chatbot webhook ${chatbotRes.status}: ${responseText}`
+          console.error('Chatbot webhook error:', whatsappError)
         }
       } catch (err) {
-        whatsappError = `Fetch error: ${err instanceof Error ? err.message : String(err)}`
-        console.error('Evolution API fetch error:', err)
+        whatsappError = `Chatbot webhook fetch error: ${err instanceof Error ? err.message : String(err)}`
+        console.error('Chatbot webhook error:', err)
       }
-    } else {
-      whatsappError = `Missing env vars: URL=${!!apiUrl}, INSTANCE=${!!instance}, KEY=${!!apiKey}`
-      console.error('Evolution API not configured:', whatsappError)
+    }
+
+    // Fallback: send directly via Evolution API if chatbot webhook failed or not configured
+    if (!messageSent) {
+      const apiUrl = process.env.EVOLUTION_API_URL
+      const instance = process.env.EVOLUTION_API_INSTANCE
+      const apiKey = process.env.EVOLUTION_API_KEY
+
+      if (apiUrl && instance && apiKey) {
+        try {
+          const evoUrl = `${apiUrl}/message/sendText/${instance}`
+          console.log('Evolution API fallback request:', { url: evoUrl, phone: formattedPhone })
+
+          const evolutionRes = await fetch(evoUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': apiKey,
+            },
+            body: JSON.stringify({
+              number: formattedPhone,
+              text: message,
+            }),
+          })
+
+          const responseText = await evolutionRes.text()
+          console.log('Evolution API response:', evolutionRes.status, responseText)
+
+          if (evolutionRes.ok) {
+            messageSent = true
+            whatsappError = ''
+          } else {
+            whatsappError = `Evolution API ${evolutionRes.status}: ${responseText}`
+            console.error('Evolution API error:', whatsappError)
+          }
+        } catch (err) {
+          whatsappError = `Fetch error: ${err instanceof Error ? err.message : String(err)}`
+          console.error('Evolution API fetch error:', err)
+        }
+      } else if (!whatsappError) {
+        whatsappError = `No messaging service configured`
+        console.error('Neither chatbot webhook nor Evolution API configured')
+      }
     }
 
     return NextResponse.json({ success: true, messageSent, whatsappError: messageSent ? undefined : whatsappError })
