@@ -444,6 +444,7 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
           siteUrl: result.url,
           score: result.score,
           topIssues,
+          checks: result.checks,
           reportUrl,
         }),
       })
