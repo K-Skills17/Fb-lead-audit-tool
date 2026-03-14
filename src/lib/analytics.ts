@@ -7,7 +7,7 @@
 // ============================================================
 
 export const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'       // ← Replace with your GA4 ID
-export const META_PIXEL_ID = '812107305229720'
+export const META_PIXEL_ID = '1175619108012566'
 
 // ---------- GA4 helpers ----------
 
