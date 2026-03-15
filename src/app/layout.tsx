@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <head>
         {/* Google Tag Manager */}
-        <Script id="gtm-init" strategy="afterInteractive">
+        <Script id="gtm-init" strategy="beforeInteractive">
           {`
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
