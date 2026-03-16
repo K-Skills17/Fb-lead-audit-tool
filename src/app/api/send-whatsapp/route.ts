@@ -131,7 +131,7 @@ function buildMessage(data: SendRequest, actionPlan: string | null): string {
   lines.push(
     ``,
     `📊 *Relatorio completo:*`,
-    data.reportUrl,
+    data.reportUrl + (data.reportUrl.includes('?') ? '&' : '?') + 'shared=true',
     ``,
     `---`,
     ``,

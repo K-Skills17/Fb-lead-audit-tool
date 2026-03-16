@@ -798,7 +798,8 @@ function ReportContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  const [leadCaptured, setLeadCaptured] = useState(false)
+  const isSharedLink = searchParams.get('shared') === 'true'
+  const [leadCaptured, setLeadCaptured] = useState(isSharedLink)
 
   const urlParam = searchParams.get('url')
 
