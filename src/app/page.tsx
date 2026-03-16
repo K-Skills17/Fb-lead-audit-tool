@@ -6,6 +6,8 @@ import { trackAuditSubmit } from '@/lib/analytics'
 
 export default function Home() {
   const [url, setUrl] = useState('')
+  const [adAccountId, setAdAccountId] = useState('')
+  const [showAdsField, setShowAdsField] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -19,6 +21,7 @@ export default function Home() {
     trackAuditSubmit(url.trim())
 
     try {
+      // Run site audit
       const res = await fetch('/api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,6 +34,23 @@ export default function Home() {
         setError(data.error || 'Algo deu errado')
         setLoading(false)
         return
+      }
+
+      // Run Facebook Ads audit in parallel if ad account ID provided
+      if (adAccountId.trim()) {
+        try {
+          const adsRes = await fetch('/api/fb-ads-audit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adAccountId: adAccountId.trim() }),
+          })
+          const adsData = await adsRes.json()
+          if (adsRes.ok) {
+            data.adsAudit = adsData
+          }
+        } catch {
+          // Non-blocking — site audit still works without ads data
+        }
       }
 
       sessionStorage.setItem('auditResult', JSON.stringify(data))
@@ -102,6 +122,41 @@ export default function Home() {
                   </span>
                 ) : 'Auditar Meu Site'}
               </button>
+            </div>
+
+            {/* Facebook Ads toggle */}
+            <div className="mt-4">
+              {!showAdsField ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAdsField(true)}
+                  className="text-sm text-blue-300 hover:text-blue-200 transition flex items-center gap-2 mx-auto"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Tambem auditar meus anuncios do Facebook (opcional)
+                </button>
+              ) : (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+                  <label className="block text-sm text-slate-300 mb-2 text-left">
+                    ID da Conta de Anuncios do Facebook
+                  </label>
+                  <input
+                    type="text"
+                    value={adAccountId}
+                    onChange={(e) => setAdAccountId(e.target.value)}
+                    placeholder="Ex: 123456789 ou act_123456789"
+                    className="w-full px-4 py-3 rounded-xl bg-white text-slate-900
+                      placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400
+                      shadow-sm text-sm"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-slate-400 mt-2 text-left">
+                    Encontre no Gerenciador de Anuncios → Configuracoes da Conta → ID da conta
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -191,6 +246,25 @@ export default function Home() {
                 ),
                 title: 'Saude Tecnica',
                 desc: 'HTTPS, favicons, atributo de idioma e avisos de conteudo misto.',
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                  </svg>
+                ),
+                title: 'Facebook Ads',
+                desc: 'CTR, CPL, frequencia, campanhas ativas e desempenho dos seus anuncios.',
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                ),
+                title: 'Formularios de Lead Ads',
+                desc: 'Qualidade dos formularios, numero de perguntas e configuracao dos Lead Ads.',
               },
             ].map((item) => (
               <div key={item.title} className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">

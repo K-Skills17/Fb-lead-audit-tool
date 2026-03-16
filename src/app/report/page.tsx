@@ -13,6 +13,56 @@ interface AuditCheck {
   points: number
 }
 
+interface AdInsights {
+  spend: number
+  impressions: number
+  clicks: number
+  ctr: number
+  cpc: number
+  cpm: number
+  reach: number
+  frequency: number
+  leads: number
+  costPerLead: number
+  conversions: number
+  dateRange: { start: string; end: string }
+}
+
+interface CampaignInsight {
+  campaignName: string
+  objective: string
+  status: string
+  spend: number
+  impressions: number
+  clicks: number
+  ctr: number
+  leads: number
+  costPerLead: number
+}
+
+interface LeadFormInfo {
+  id: string
+  name: string
+  status: string
+  questionCount: number
+  questions: string[]
+  hasCustomDisclaimer: boolean
+  hasContextCard: boolean
+  leadsCount: number
+  createdTime: string
+}
+
+interface AdsAuditResult {
+  accountName: string
+  accountId: string
+  currency: string
+  insights: AdInsights | null
+  campaigns: CampaignInsight[]
+  leadForms: LeadFormInfo[]
+  checks: AuditCheck[]
+  score: number
+}
+
 interface AuditResult {
   url: string
   score: number
@@ -20,6 +70,7 @@ interface AuditResult {
   summary: { total: number; passed: number; failed: number; critical: number }
   categories: Record<string, AuditCheck[]>
   checks: AuditCheck[]
+  adsAudit?: AdsAuditResult
 }
 
 // --- Plain-language mappings for non-technical users ---
@@ -55,6 +106,16 @@ const categoryMeta: Record<string, { icon: string; label: string; description: s
     label: 'Saude Tecnica',
     description: 'O basico do seu site esta funcionando corretamente?',
   },
+  'Facebook Ads': {
+    icon: '📊',
+    label: 'Facebook Ads',
+    description: 'Seus anuncios estao gerando resultados?',
+  },
+  'Formularios de Lead': {
+    icon: '📝',
+    label: 'Formularios de Lead Ads',
+    description: 'Seus formularios de captacao estao otimizados?',
+  },
 }
 
 const friendlyCheckNames: Record<string, string> = {
@@ -82,6 +143,19 @@ const friendlyCheckNames: Record<string, string> = {
   'Favicon': 'Icone na aba do navegador',
   'Atributo de Idioma': 'Idioma da pagina definido',
   'Conteudo Misto': 'Seguranca dos recursos da pagina',
+  // Facebook Ads checks
+  'Taxa de Cliques (CTR)': 'Quantas pessoas clicam nos seus anuncios',
+  'Custo por Mil (CPM)': 'Quanto custa alcançar 1.000 pessoas',
+  'Frequencia de Exibicao': 'Quantas vezes cada pessoa ve seu anuncio',
+  'Custo por Lead (CPL)': 'Quanto custa cada novo contato',
+  'Investimento Ativo': 'Investimento recente em anuncios',
+  'Campanhas Ativas': 'Quantidade de campanhas rodando',
+  'Objetivo de Lead Generation': 'Campanhas otimizadas para leads',
+  // Lead Form checks
+  'Quantidade de Perguntas': 'Tamanho do formulario',
+  'Cartao de Contexto': 'Informacao antes do formulario',
+  'Formularios Ativos': 'Formularios disponiveis',
+  'Formularios de Lead Ads': 'Captacao de leads no Facebook',
 }
 
 const friendlyMessages: Record<string, { good: string; bad: string }> = {
@@ -397,6 +471,153 @@ function QuickSummaryCards({ result }: { result: AuditResult }) {
   )
 }
 
+// --- Facebook Ads Components ---
+
+function AdsOverviewCard({ insights, currency }: { insights: AdInsights; currency: string }) {
+  const metrics = [
+    { label: 'Investimento', value: `${currency === 'BRL' ? 'R$' : currency}${insights.spend.toFixed(2)}`, sub: 'ultimos 30 dias' },
+    { label: 'Alcance', value: insights.reach.toLocaleString(), sub: 'pessoas' },
+    { label: 'Cliques', value: insights.clicks.toLocaleString(), sub: `CTR: ${insights.ctr.toFixed(2)}%` },
+    { label: 'CPM', value: `R$${insights.cpm.toFixed(2)}`, sub: 'custo por 1k views' },
+    { label: 'Leads', value: insights.leads.toLocaleString(), sub: insights.leads > 0 ? `CPL: R$${insights.costPerLead.toFixed(2)}` : 'sem leads' },
+    { label: 'Frequencia', value: insights.frequency.toFixed(1), sub: 'vezes por pessoa' },
+  ]
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-5 border-b border-slate-100 bg-blue-50">
+        <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <span className="text-xl">📊</span>
+          Desempenho dos Anuncios — Ultimos 30 Dias
+        </h2>
+        <p className="text-sm text-slate-600 mt-1">
+          {insights.dateRange.start} a {insights.dateRange.end}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-slate-100">
+        {metrics.map(m => (
+          <div key={m.label} className="bg-white p-5 text-center">
+            <div className="text-2xl font-bold text-slate-800">{m.value}</div>
+            <div className="text-sm font-medium text-slate-600 mt-1">{m.label}</div>
+            <div className="text-xs text-slate-400 mt-0.5">{m.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CampaignsTable({ campaigns }: { campaigns: CampaignInsight[] }) {
+  if (campaigns.length === 0) return null
+
+  const objectiveLabels: Record<string, string> = {
+    'LEAD_GENERATION': 'Leads',
+    'OUTCOME_LEADS': 'Leads',
+    'LINK_CLICKS': 'Cliques',
+    'OUTCOME_TRAFFIC': 'Trafego',
+    'CONVERSIONS': 'Conversoes',
+    'OUTCOME_ENGAGEMENT': 'Engajamento',
+    'REACH': 'Alcance',
+    'OUTCOME_AWARENESS': 'Reconhecimento',
+    'BRAND_AWARENESS': 'Reconhecimento',
+    'POST_ENGAGEMENT': 'Engajamento',
+    'MESSAGES': 'Mensagens',
+    'OUTCOME_SALES': 'Vendas',
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-5 border-b border-slate-100">
+        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <span className="text-xl">🎯</span>
+          Suas Campanhas
+        </h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-slate-50 text-left text-slate-600">
+              <th className="px-5 py-3 font-semibold">Campanha</th>
+              <th className="px-5 py-3 font-semibold">Objetivo</th>
+              <th className="px-5 py-3 font-semibold text-right">Gasto</th>
+              <th className="px-5 py-3 font-semibold text-right">CTR</th>
+              <th className="px-5 py-3 font-semibold text-right">Leads</th>
+              <th className="px-5 py-3 font-semibold text-right">CPL</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {campaigns.map((c, i) => (
+              <tr key={i} className="hover:bg-slate-50">
+                <td className="px-5 py-3">
+                  <div className="font-medium text-slate-800 truncate max-w-[200px]">{c.campaignName}</div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {c.status === 'ACTIVE' ? 'Ativa' : 'Pausada'}
+                  </span>
+                </td>
+                <td className="px-5 py-3 text-slate-600">{objectiveLabels[c.objective] || c.objective}</td>
+                <td className="px-5 py-3 text-right text-slate-800">R${c.spend.toFixed(2)}</td>
+                <td className="px-5 py-3 text-right">
+                  <span className={c.ctr >= 1 ? 'text-green-600' : 'text-red-500'}>{c.ctr.toFixed(2)}%</span>
+                </td>
+                <td className="px-5 py-3 text-right text-slate-800">{c.leads}</td>
+                <td className="px-5 py-3 text-right text-slate-800">
+                  {c.costPerLead > 0 ? `R$${c.costPerLead.toFixed(2)}` : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function LeadFormsCard({ forms }: { forms: LeadFormInfo[] }) {
+  if (forms.length === 0) return null
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-5 border-b border-slate-100">
+        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <span className="text-xl">📝</span>
+          Seus Formularios de Lead Ads
+        </h3>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {forms.map((form) => (
+          <div key={form.id} className="px-6 py-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-800">{form.name}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${form.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                  {form.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
+                </span>
+              </div>
+              <span className="text-sm text-slate-500">{form.leadsCount} leads</span>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span className={`text-xs px-2 py-1 rounded-lg ${form.questionCount <= 3 ? 'bg-green-50 text-green-700' : form.questionCount <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>
+                {form.questionCount} perguntas
+              </span>
+              {form.hasContextCard && (
+                <span className="text-xs px-2 py-1 rounded-lg bg-blue-50 text-blue-700">Com contexto</span>
+              )}
+              {form.hasCustomDisclaimer && (
+                <span className="text-xs px-2 py-1 rounded-lg bg-purple-50 text-purple-700">Disclaimer personalizado</span>
+              )}
+            </div>
+            {form.questions.length > 0 && (
+              <div className="text-xs text-slate-500">
+                Campos: {form.questions.join(', ')}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // --- Lead Capture Gate ---
 
 function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComplete: () => void }) {
@@ -670,6 +891,15 @@ function ReportContent() {
     )
   }
 
+  // Merge ads checks into quick summary if available
+  const allCategories = { ...result.categories }
+  if (result.adsAudit?.checks) {
+    for (const check of result.adsAudit.checks) {
+      if (!allCategories[check.category]) allCategories[check.category] = []
+      allCategories[check.category].push(check)
+    }
+  }
+
   const shareUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/report?url=${encodeURIComponent(urlParam || '')}`
     : ''
@@ -731,7 +961,7 @@ function ReportContent() {
       <div className="max-w-4xl mx-auto px-4 -mt-6">
         {/* Quick Summary */}
         <div className="mb-8">
-          <QuickSummaryCards result={result} />
+          <QuickSummaryCards result={{ ...result, categories: allCategories }} />
         </div>
 
         {/* Top Priorities */}
@@ -739,10 +969,40 @@ function ReportContent() {
           <TopPriorities checks={result.checks} />
         </div>
 
+        {/* Facebook Ads Section (if available) */}
+        {result.adsAudit && (
+          <div className="space-y-6 mb-8">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              📊 Auditoria Facebook Ads
+              <span className="text-sm font-normal text-slate-500">— {result.adsAudit.accountName}</span>
+            </h2>
+
+            {result.adsAudit.insights && (
+              <AdsOverviewCard insights={result.adsAudit.insights} currency={result.adsAudit.currency} />
+            )}
+
+            <CampaignsTable campaigns={result.adsAudit.campaigns} />
+            <LeadFormsCard forms={result.adsAudit.leadForms} />
+
+            {/* Ads audit check cards */}
+            {(() => {
+              const adsCategories = result.adsAudit.checks.reduce((acc, check) => {
+                if (!acc[check.category]) acc[check.category] = []
+                acc[check.category].push(check)
+                return acc
+              }, {} as Record<string, AuditCheck[]>)
+
+              return Object.entries(adsCategories).map(([cat, checks]) => (
+                <CategoryCard key={cat} name={cat} checks={checks} />
+              ))
+            })()}
+          </div>
+        )}
+
         {/* Detail Sections */}
         <div className="space-y-6 mb-10">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            Analise Detalhada
+            Analise do Site
           </h2>
           {Object.entries(result.categories).map(([cat, checks]) => (
             <CategoryCard key={cat} name={cat} checks={checks} />
