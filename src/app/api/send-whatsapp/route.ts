@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import Anthropic from '@anthropic-ai/sdk'
+import { trackLeadServer, trackContactServer } from '@/lib/meta-capi'
 
 interface AuditCheck {
   category: string
@@ -203,13 +204,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Numero de telefone invalido' }, { status: 400 })
     }
 
-    // Run AI analysis and sheet save in parallel
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || ''
+    const userAgent = request.headers.get('user-agent') || ''
+
+    // Run AI analysis, sheet save, and Meta CAPI lead event in parallel
     const [actionPlan] = await Promise.all([
       generateActionPlan(body).catch(err => {
         console.error('Claude AI error:', err)
         return null
       }),
       appendToSheet(body),
+      trackLeadServer({
+        phone: formattedPhone,
+        firstName: name,
+        clinicName,
+        score: body.score,
+        siteUrl: body.siteUrl,
+        ip,
+        userAgent,
+      }),
     ])
 
     const message = buildMessage(body, actionPlan)
@@ -307,6 +320,17 @@ export async function POST(request: NextRequest) {
         whatsappError = `No messaging service configured`
         console.error('Neither chatbot webhook nor Evolution API configured')
       }
+    }
+
+    // Fire Meta Contact event if WhatsApp message was delivered
+    if (messageSent) {
+      trackContactServer({
+        phone: formattedPhone,
+        firstName: name,
+        siteUrl: body.siteUrl,
+        ip,
+        userAgent,
+      }).catch(() => {}) // non-blocking
     }
 
     return NextResponse.json({ success: true, messageSent, whatsappError: messageSent ? undefined : whatsappError })

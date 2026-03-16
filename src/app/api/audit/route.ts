@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import { trackViewContentServer } from '@/lib/meta-capi'
 
 export const maxDuration = 30
 
@@ -603,6 +604,11 @@ export async function POST(request: NextRequest) {
     const passed = allChecks.filter(c => c.passed).length
     const failed = allChecks.filter(c => !c.passed).length
     const critical = allChecks.filter(c => !c.passed && c.severity === 'critical').length
+
+    // Fire Meta ViewContent event (non-blocking)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || ''
+    const userAgent = request.headers.get('user-agent') || ''
+    trackViewContentServer({ siteUrl: finalUrl, ip, userAgent }).catch(() => {})
 
     return NextResponse.json({
       url: finalUrl,
