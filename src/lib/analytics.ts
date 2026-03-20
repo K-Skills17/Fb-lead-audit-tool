@@ -7,6 +7,7 @@
 declare global {
   interface Window {
     dataLayer: Record<string, unknown>[]
+    fbq: (...args: unknown[]) => void
   }
 }
 
@@ -14,6 +15,18 @@ function pushEvent(event: string, params: Record<string, unknown> = {}) {
   if (typeof window !== 'undefined') {
     window.dataLayer = window.dataLayer || []
     window.dataLayer.push({ event, ...params })
+  }
+}
+
+function fbqTrack(eventName: string, params: Record<string, unknown> = {}) {
+  if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    window.fbq('track', eventName, params)
+  }
+}
+
+function fbqTrackCustom(eventName: string, params: Record<string, unknown> = {}) {
+  if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    window.fbq('trackCustom', eventName, params)
   }
 }
 
@@ -25,6 +38,7 @@ export function trackAuditSubmit(url: string) {
     event_category: 'engagement',
     event_label: url,
   })
+  fbqTrackCustom('AuditSubmit', { url })
 }
 
 /** User fills in contact info on the lead capture form (real lead) */
@@ -34,6 +48,7 @@ export function trackLeadCapture(clinicName: string, score: number) {
     event_label: clinicName,
     value: score,
   })
+  fbqTrack('Lead', { content_name: clinicName, value: score })
 }
 
 /** Audit result is loaded on the report page */
@@ -43,6 +58,7 @@ export function trackAuditResult(url: string, score: number) {
     event_label: url,
     value: score,
   })
+  fbqTrack('ViewContent', { content_name: url, value: score })
 }
 
 /** User clicks the WhatsApp CTA button */
@@ -52,6 +68,7 @@ export function trackWhatsAppClick(score: number) {
     event_label: 'WhatsApp CTA',
     value: score,
   })
+  fbqTrack('Contact', { value: score })
 }
 
 /** User clicks the Calendly CTA button */
@@ -61,6 +78,7 @@ export function trackCalendlyClick(score: number) {
     event_label: 'Calendly CTA',
     value: score,
   })
+  fbqTrack('Schedule', { value: score })
 }
 
 /** User copies the share link */

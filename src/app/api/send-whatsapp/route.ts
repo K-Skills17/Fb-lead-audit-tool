@@ -142,6 +142,66 @@ function buildMessage(data: SendRequest, actionPlan: string | null): string {
   return lines.join('\n')
 }
 
+// --- Facebook Conversions API ---
+
+async function sendFbConversionEvent(data: SendRequest) {
+  const accessToken = process.env.FB_ACCESS_TOKEN
+  const pixelId = process.env.FB_PIXEL_ID
+
+  if (!accessToken || !pixelId) {
+    console.warn('Facebook Conversions API not configured — skipping')
+    return
+  }
+
+  try {
+    const timestamp = Math.floor(Date.now() / 1000)
+    const hashedPhone = await hashSHA256('55' + data.phone.replace(/\D/g, ''))
+
+    const eventData = {
+      data: [
+        {
+          event_name: 'Lead',
+          event_time: timestamp,
+          action_source: 'website',
+          user_data: {
+            ph: [hashedPhone],
+            fn: [await hashSHA256(data.name.trim().toLowerCase())],
+          },
+          custom_data: {
+            content_name: data.clinicName,
+            value: data.score,
+            currency: 'BRL',
+            site_url: data.siteUrl,
+          },
+        },
+      ],
+      access_token: accessToken,
+    }
+
+    const res = await fetch(
+      `https://graph.facebook.com/v21.0/${pixelId}/events`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      }
+    )
+
+    const result = await res.text()
+    console.log('FB Conversions API response:', res.status, result)
+  } catch (err) {
+    console.error('FB Conversions API error:', err)
+  }
+}
+
+async function hashSHA256(value: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(value)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 // --- Google Sheets ---
 
 async function appendToSheet(data: SendRequest) {
@@ -203,13 +263,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Numero de telefone invalido' }, { status: 400 })
     }
 
-    // Run AI analysis and sheet save in parallel
+    // Run AI analysis, sheet save, and FB conversion in parallel
     const [actionPlan] = await Promise.all([
       generateActionPlan(body).catch(err => {
         console.error('Claude AI error:', err)
         return null
       }),
       appendToSheet(body),
+      sendFbConversionEvent(body).catch(err => {
+        console.error('FB Conversions API error:', err)
+      }),
     ])
 
     const message = buildMessage(body, actionPlan)
