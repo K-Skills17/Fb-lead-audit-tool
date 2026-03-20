@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { trackAuditResult, trackLeadCapture, trackWhatsAppClick, trackCalendlyClick, trackShareCopy } from '@/lib/analytics'
 
 interface AuditCheck {
@@ -189,7 +190,7 @@ function ScoreRing({ score }: { score: number }) {
   const radius = 70
   const circumference = 2 * Math.PI * radius
   const progress = (score / 100) * circumference
-  const color = score >= 80 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444'
+  const color = score >= 80 ? '#22c55e' : score >= 50 ? '#c5a368' : '#ef4444'
 
   return (
     <div className="relative inline-flex items-center justify-center">
@@ -205,7 +206,7 @@ function ScoreRing({ score }: { score: number }) {
       </svg>
       <div className="absolute text-center">
         <div className="text-5xl font-bold" style={{ color }}>{score}</div>
-        <div className="text-sm text-slate-400 font-medium">de 100</div>
+        <div className="text-sm text-[#f9f6f0]/40 font-medium">de 100</div>
       </div>
     </div>
   )
@@ -219,8 +220,8 @@ function ScoreVerdict({ score }: { score: number }) {
     </div>
   )
   if (score >= 50) return (
-    <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 px-4 py-2 rounded-full text-sm font-semibold">
-      <span className="w-2 h-2 bg-amber-400 rounded-full" />
+    <div className="inline-flex items-center gap-2 bg-[#c5a368]/20 text-[#d4b87a] px-4 py-2 rounded-full text-sm font-semibold">
+      <span className="w-2 h-2 bg-[#c5a368] rounded-full" />
       Bom, mas pode melhorar bastante
     </div>
   )
@@ -236,14 +237,14 @@ function CategoryProgress({ checks }: { checks: AuditCheck[] }) {
   const passed = checks.filter(c => c.passed).length
   const total = checks.length
   const pct = Math.round((passed / total) * 100)
-  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'
+  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-[#c5a368]' : 'bg-red-500'
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all duration-700 ease-out`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">{passed}/{total}</span>
+      <span className="text-sm font-semibold text-[#f9f6f0]/60 whitespace-nowrap">{passed}/{total}</span>
     </div>
   )
 }
@@ -256,9 +257,9 @@ function CheckItem({ check }: { check: AuditCheck }) {
     : check.message
 
   return (
-    <div className={`px-5 py-4 flex items-start gap-4 ${!check.passed ? 'bg-red-50/50' : ''}`}>
+    <div className={`px-5 py-4 flex items-start gap-4 ${!check.passed ? 'bg-red-500/5' : ''}`}>
       <div className={`mt-1 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center
-        ${check.passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
+        ${check.passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
         {check.passed ? (
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -271,16 +272,16 @@ function CheckItem({ check }: { check: AuditCheck }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className={`font-medium ${check.passed ? 'text-slate-700' : 'text-slate-800'}`}>
+          <span className={`font-medium ${check.passed ? 'text-[#f9f6f0]/70' : 'text-[#f9f6f0]'}`}>
             {displayName}
           </span>
           {!check.passed && check.severity === 'critical' && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
               Importante
             </span>
           )}
         </div>
-        <p className={`text-sm leading-relaxed ${check.passed ? 'text-slate-500' : 'text-slate-600'}`}>
+        <p className={`text-sm leading-relaxed ${check.passed ? 'text-[#f9f6f0]/40' : 'text-[#f9f6f0]/60'}`}>
           {displayMessage}
         </p>
       </div>
@@ -295,25 +296,25 @@ function CategoryCard({ name, checks }: { name: string; checks: AuditCheck[] }) 
   const allPassed = failedChecks.length === 0
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all ${allPassed ? 'border-green-100' : 'border-slate-200'}`}>
-      <div className="px-6 py-5 border-b border-slate-100">
+    <div className={`bg-white/5 rounded-2xl border overflow-hidden transition-all ${allPassed ? 'border-green-500/20' : 'border-white/10'}`}>
+      <div className="px-6 py-5 border-b border-white/10">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{meta.icon}</span>
             <div>
-              <h3 className="font-bold text-slate-800 text-lg">{meta.label}</h3>
-              <p className="text-sm text-slate-500">{meta.description}</p>
+              <h3 className="font-bold text-[#f9f6f0] text-lg">{meta.label}</h3>
+              <p className="text-sm text-[#f9f6f0]/50">{meta.description}</p>
             </div>
           </div>
           {allPassed && (
-            <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+            <span className="bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
               Tudo certo!
             </span>
           )}
         </div>
         <CategoryProgress checks={checks} />
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-white/5">
         {failedChecks.map((check, i) => (
           <CheckItem key={`fail-${i}`} check={check} />
         ))}
@@ -333,17 +334,17 @@ function TopPriorities({ checks }: { checks: AuditCheck[] }) {
   if (critical.length === 0) return null
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-      <div className="px-6 py-5 border-b border-red-100 bg-red-50">
-        <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+    <div className="bg-white/5 rounded-2xl border border-red-500/20 overflow-hidden">
+      <div className="px-6 py-5 border-b border-red-500/20 bg-red-500/10">
+        <h2 className="font-bold text-[#f9f6f0] text-lg flex items-center gap-2">
           <span className="text-xl">⚡</span>
           Prioridades — Corrija Primeiro
         </h2>
-        <p className="text-sm text-slate-600 mt-1">
+        <p className="text-sm text-[#f9f6f0]/60 mt-1">
           Estes itens tem o maior impacto no seu negocio. Corrigir eles pode trazer mais clientes rapidamente.
         </p>
       </div>
-      <div className="divide-y divide-red-50">
+      <div className="divide-y divide-red-500/10">
         {critical.map((check, i) => {
           const displayName = friendlyCheckNames[check.name] || check.name
           const friendly = friendlyMessages[check.name]
@@ -352,19 +353,19 @@ function TopPriorities({ checks }: { checks: AuditCheck[] }) {
 
           return (
             <div key={i} className="px-6 py-4 flex items-start gap-4">
-              <div className="mt-1 w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+              <div className="mt-1 w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">
                 {i + 1}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-slate-800">{displayName}</span>
+                  <span className="font-semibold text-[#f9f6f0]">{displayName}</span>
                   {catMeta && (
-                    <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-[#f9f6f0]/40 bg-white/10 px-2 py-0.5 rounded-full">
                       {catMeta.icon} {catMeta.label}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{displayMessage}</p>
+                <p className="text-sm text-[#f9f6f0]/60 leading-relaxed">{displayMessage}</p>
               </div>
             </div>
           )
@@ -383,7 +384,7 @@ function QuickSummaryCards({ result }: { result: AuditResult }) {
         const passed = checks.filter(c => c.passed).length
         const total = checks.length
         const pct = Math.round((passed / total) * 100)
-        const color = pct >= 80 ? 'text-green-600 bg-green-50 border-green-100' : pct >= 50 ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-red-600 bg-red-50 border-red-100'
+        const color = pct >= 80 ? 'text-green-400 bg-green-500/10 border-green-500/20' : pct >= 50 ? 'text-[#c5a368] bg-[#c5a368]/10 border-[#c5a368]/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
 
         return (
           <div key={name} className={`rounded-xl border p-4 text-center ${color}`}>
@@ -460,35 +461,40 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
     onComplete()
   }
 
-  const scoreColor = result.score >= 80 ? '#22c55e' : result.score >= 50 ? '#f59e0b' : '#ef4444'
+  const scoreColor = result.score >= 80 ? '#22c55e' : result.score >= 50 ? '#c5a368' : '#ef4444'
 
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <Image src="/lk-logo.png" alt="LK Digital" width={140} height={47} className="mx-auto" />
+        </div>
+
         {/* Score teaser */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 mb-4"
             style={{ borderColor: scoreColor }}>
             <span className="text-3xl font-bold" style={{ color: scoreColor }}>{result.score}</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#f9f6f0] mb-2">
             Sua analise esta pronta!
           </h1>
-          <p className="text-slate-300 text-lg">
+          <p className="text-[#f9f6f0]/60 text-lg">
             Seu site tirou <strong style={{ color: scoreColor }}>{result.score}/100</strong>.
             {result.summary.critical > 0 && (
               <span className="text-red-300"> Encontramos {result.summary.critical} problema{result.summary.critical > 1 ? 's' : ''} importante{result.summary.critical > 1 ? 's' : ''}.</span>
             )}
           </p>
-          <p className="text-slate-400 text-sm mt-2">
+          <p className="text-[#f9f6f0]/40 text-sm mt-2">
             Preencha abaixo para ver o relatorio completo. Enviaremos tambem uma copia no seu WhatsApp.
           </p>
         </div>
 
         {/* Form card */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 shadow-xl p-6 md:p-8 space-y-5">
           <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-1.5">
+            <label htmlFor="name" className="block text-sm font-semibold text-[#f9f6f0]/80 mb-1.5">
               Seu nome
             </label>
             <input
@@ -497,14 +503,14 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Maria Silva"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800
-                placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#f9f6f0]
+                placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50 focus:border-transparent"
               disabled={submitting}
             />
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-1.5">
+            <label htmlFor="phone" className="block text-sm font-semibold text-[#f9f6f0]/80 mb-1.5">
               WhatsApp / Telefone
             </label>
             <input
@@ -513,14 +519,14 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
               value={phone}
               onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
               placeholder="(11) 99999-9999"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800
-                placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#f9f6f0]
+                placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50 focus:border-transparent"
               disabled={submitting}
             />
           </div>
 
           <div>
-            <label htmlFor="clinic" className="block text-sm font-semibold text-slate-700 mb-1.5">
+            <label htmlFor="clinic" className="block text-sm font-semibold text-[#f9f6f0]/80 mb-1.5">
               Nome da clinica
             </label>
             <input
@@ -529,22 +535,22 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
               value={clinicName}
               onChange={(e) => setClinicName(e.target.value)}
               placeholder="Ex: Clinica Sorriso"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800
-                placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#f9f6f0]
+                placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50 focus:border-transparent"
               disabled={submitting}
             />
           </div>
 
           {formError && (
-            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{formError}</p>
+            <p className="text-sm text-red-400 bg-red-500/10 px-4 py-2 rounded-lg">{formError}</p>
           )}
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full gradient-accent text-white py-4 rounded-xl text-lg font-semibold
+            className="w-full gradient-accent text-[#1a1a1a] py-4 rounded-xl text-lg font-semibold
               hover:opacity-90 transition-all disabled:opacity-60 disabled:cursor-not-allowed
-              shadow-lg"
+              shadow-lg hover:shadow-xl hover:-translate-y-[1px]"
           >
             {submitting ? (
               <span className="flex items-center justify-center gap-2">
@@ -559,7 +565,7 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
             )}
           </button>
 
-          <p className="text-xs text-center text-slate-400">
+          <p className="text-xs text-center text-[#f9f6f0]/40">
             Seus dados ficam seguros. Usamos apenas para enviar o relatorio.
           </p>
         </form>
@@ -623,14 +629,14 @@ function ReportContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
-        <div className="text-center text-white px-4">
-          <svg className="animate-spin w-12 h-12 mx-auto mb-6" fill="none" viewBox="0 0 24 24">
+        <div className="text-center text-[#f9f6f0] px-4">
+          <svg className="animate-spin w-12 h-12 mx-auto mb-6 text-[#c5a368]" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <h2 className="text-2xl font-bold mb-2">Analisando seu site...</h2>
-          <p className="text-slate-300 text-lg">Estamos verificando tudo para voce</p>
-          <p className="text-slate-400 text-sm mt-2">Isso leva de 5 a 15 segundos</p>
+          <p className="text-[#f9f6f0]/60 text-lg">Estamos verificando tudo para voce</p>
+          <p className="text-[#f9f6f0]/40 text-sm mt-2">Isso leva de 5 a 15 segundos</p>
         </div>
       </div>
     )
@@ -638,16 +644,16 @@ function ReportContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-20 h-20 mx-auto mb-6 bg-amber-100 rounded-2xl flex items-center justify-center">
-            <svg className="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 mx-auto mb-6 bg-[#c5a368]/20 rounded-2xl flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#c5a368]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-3">Nao conseguimos analisar</h2>
-          <p className="text-slate-500 mb-8 text-lg">{error}</p>
-          <button onClick={() => router.push('/')} className="gradient-accent text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition text-lg">
+          <h2 className="text-2xl font-bold text-[#f9f6f0] mb-3">Nao conseguimos analisar</h2>
+          <p className="text-[#f9f6f0]/50 mb-8 text-lg">{error}</p>
+          <button onClick={() => router.push('/')} className="gradient-accent text-[#1a1a1a] px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition text-lg">
             Tentar Outra URL
           </button>
         </div>
@@ -688,37 +694,40 @@ function ReportContent() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-[#0a0a0a]">
       {/* Header */}
-      <div className="gradient-bg text-white">
+      <div className="gradient-bg text-[#f9f6f0]">
         <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
-          <button onClick={() => router.push('/')} className="flex items-center gap-1 text-slate-400 hover:text-white transition mb-8 text-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Nova Auditoria
-          </button>
+          <div className="flex items-center justify-between mb-8">
+            <button onClick={() => router.push('/')} className="flex items-center gap-1 text-[#f9f6f0]/40 hover:text-[#f9f6f0] transition text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Nova Auditoria
+            </button>
+            <Image src="/lk-logo.png" alt="LK Digital" width={120} height={40} />
+          </div>
 
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <ScoreRing score={result.score} />
             <div className="text-center md:text-left flex-1">
               <h1 className="text-3xl md:text-4xl font-bold mb-3">Resultado da Analise</h1>
-              <p className="text-slate-300 mb-4 break-all text-sm">{result.url}</p>
+              <p className="text-[#f9f6f0]/40 mb-4 break-all text-sm">{result.url}</p>
               <ScoreVerdict score={result.score} />
 
               <div className="flex flex-wrap gap-4 mt-6 justify-center md:justify-start text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 bg-green-500 rounded-full" />
-                  <span className="text-slate-300"><strong className="text-white">{result.summary.passed}</strong> itens OK</span>
+                  <span className="text-[#f9f6f0]/60"><strong className="text-[#f9f6f0]">{result.summary.passed}</strong> itens OK</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 bg-red-500 rounded-full" />
-                  <span className="text-slate-300"><strong className="text-white">{result.summary.failed}</strong> para corrigir</span>
+                  <span className="text-[#f9f6f0]/60"><strong className="text-[#f9f6f0]">{result.summary.failed}</strong> para corrigir</span>
                 </div>
                 {result.summary.critical > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-                    <span className="text-red-300"><strong className="text-white">{result.summary.critical}</strong> urgentes</span>
+                    <span className="text-red-300"><strong className="text-[#f9f6f0]">{result.summary.critical}</strong> urgentes</span>
                   </div>
                 )}
               </div>
@@ -741,7 +750,7 @@ function ReportContent() {
 
         {/* Detail Sections */}
         <div className="space-y-6 mb-10">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#f9f6f0] flex items-center gap-2">
             Analise Detalhada
           </h2>
           {Object.entries(result.categories).map(([cat, checks]) => (
@@ -750,14 +759,14 @@ function ReportContent() {
         </div>
 
         {/* Share */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-10">
-          <p className="text-sm font-medium text-slate-700 mb-3">Compartilhar este relatorio</p>
+        <div className="bg-white/5 rounded-2xl border border-white/10 p-5 mb-10">
+          <p className="text-sm font-medium text-[#f9f6f0]/70 mb-3">Compartilhar este relatorio</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               readOnly
               value={shareUrl}
-              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 w-full"
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#f9f6f0]/60 w-full"
               onClick={(e) => (e.target as HTMLInputElement).select()}
             />
             <button
@@ -765,7 +774,7 @@ function ReportContent() {
               className={`px-6 py-3 rounded-xl text-sm font-semibold transition whitespace-nowrap ${
                 copied
                   ? 'bg-green-600 text-white'
-                  : 'bg-slate-800 text-white hover:bg-slate-700'
+                  : 'gradient-accent text-[#1a1a1a] hover:opacity-90'
               }`}
             >
               {copied ? 'Copiado!' : 'Copiar Link'}
@@ -774,14 +783,14 @@ function ReportContent() {
         </div>
 
         {/* CTA Section */}
-        <div className="rounded-2xl shadow-lg overflow-hidden mb-10">
-          <div className="gradient-bg p-8 md:p-12 text-center text-white">
+        <div className="rounded-2xl shadow-lg overflow-hidden mb-10 border border-white/10">
+          <div className="gradient-bg p-8 md:p-12 text-center text-[#f9f6f0]">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
               {result.score < 70
                 ? 'Quer que a gente resolva isso pra voce?'
                 : 'Quer turbinar seu site ainda mais?'}
             </h2>
-            <p className="text-slate-300 mb-8 max-w-xl mx-auto text-lg leading-relaxed">
+            <p className="text-[#f9f6f0]/60 mb-8 max-w-xl mx-auto text-lg leading-relaxed">
               {result.score < 70
                 ? 'Nossa equipe pode corrigir tudo e deixar seu site pronto para atrair mais clientes.'
                 : 'Nossos especialistas podem levar seu site ao proximo nivel.'}
@@ -809,7 +818,7 @@ function ReportContent() {
                 rel="noopener noreferrer"
                 onClick={() => trackCalendlyClick(result.score)}
                 className="inline-flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20
-                  text-white border border-white/30 px-8 py-4 rounded-xl text-lg font-semibold transition-all
+                  text-[#f9f6f0] border border-white/20 px-8 py-4 rounded-xl text-lg font-semibold transition-all
                   hover:-translate-y-0.5"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -819,7 +828,7 @@ function ReportContent() {
               </a>
             </div>
 
-            <p className="mt-6 text-sm text-slate-400">
+            <p className="mt-6 text-sm text-[#f9f6f0]/40">
               Sem compromisso — a gente so quer te ajudar a crescer.
             </p>
           </div>
@@ -829,7 +838,7 @@ function ReportContent() {
         <div className="text-center pb-12">
           <button
             onClick={() => router.push('/')}
-            className="text-slate-500 hover:text-slate-800 font-medium transition text-lg"
+            className="text-[#f9f6f0]/50 hover:text-[#c5a368] font-medium transition text-lg"
           >
             ← Analisar Outro Site
           </button>
@@ -837,9 +846,9 @@ function ReportContent() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8 px-4">
-        <div className="max-w-5xl mx-auto text-center text-sm text-slate-400">
-          <p>WebAudit Pro — Ferramenta Gratuita de Auditoria de Sites</p>
+      <footer className="border-t border-white/10 py-8 px-4">
+        <div className="max-w-5xl mx-auto text-center text-sm text-[#f9f6f0]/40">
+          <p>LK Digital — Ferramenta Gratuita de Auditoria de Sites</p>
         </div>
       </footer>
     </main>
@@ -850,8 +859,8 @@ export default function ReportPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center gradient-bg">
-        <div className="text-center text-white">
-          <svg className="animate-spin w-12 h-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+        <div className="text-center text-[#f9f6f0]">
+          <svg className="animate-spin w-12 h-12 mx-auto mb-4 text-[#c5a368]" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>

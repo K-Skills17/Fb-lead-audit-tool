@@ -6,10 +6,10 @@ const GTM_ID = 'GTM-WKQ6FX8D'
 const FB_PIXEL_ID = '812107305229720'
 
 export const metadata: Metadata = {
-  title: 'WebAudit Pro — Auditoria Gratuita de Sites',
+  title: 'LK Digital — Auditoria Gratuita de Sites',
   description: 'Receba uma auditoria instantanea e gratuita do seu site. Verifique problemas de SEO, formularios de contato ausentes, responsividade mobile e muito mais.',
   openGraph: {
-    title: 'WebAudit Pro — Auditoria Gratuita de Sites',
+    title: 'LK Digital — Auditoria Gratuita de Sites',
     description: 'Receba uma auditoria instantanea e gratuita do seu site.',
     type: 'website',
   },
@@ -58,7 +58,7 @@ export default function RootLayout({
           />
         </noscript>
       </head>
-      <body className="min-h-screen bg-slate-50">
+      <body className="min-h-screen bg-[#0a0a0a]">
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
