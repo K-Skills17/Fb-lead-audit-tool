@@ -426,7 +426,15 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
     setFormError('')
 
     const reportUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}/report?url=${encodeURIComponent(result.url)}`
+      ? (() => {
+          const hash = window.location.hash
+          if (hash.startsWith('#data=')) {
+            return `${window.location.origin}/report?url=${encodeURIComponent(result.url)}${hash}`
+          }
+          const jsonStr = JSON.stringify(result)
+          const encoded = btoa(unescape(encodeURIComponent(jsonStr)))
+          return `${window.location.origin}/report?url=${encodeURIComponent(result.url)}#data=${encoded}`
+        })()
       : ''
 
     const topIssues = result.checks
@@ -584,6 +592,7 @@ function ReportContent() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [leadCaptured, setLeadCaptured] = useState(false)
+  const [hasHashData, setHasHashData] = useState(false)
 
   const urlParam = searchParams.get('url')
 
@@ -594,6 +603,22 @@ function ReportContent() {
         return
       }
 
+      // 1. Check for #data= in the URL hash first (shareable link)
+      const hash = window.location.hash
+      if (hash.startsWith('#data=')) {
+        try {
+          const encoded = hash.slice(6) // remove '#data='
+          const jsonStr = decodeURIComponent(escape(atob(encoded)))
+          const data = JSON.parse(jsonStr)
+          setResult(data)
+          setHasHashData(true)
+          setLeadCaptured(true) // skip lead gate for shared links
+          setLoading(false)
+          return
+        } catch { /* fall through */ }
+      }
+
+      // 2. Fall back to sessionStorage (backward compat)
       const cached = sessionStorage.getItem('auditResult')
       if (cached) {
         try {
@@ -605,6 +630,7 @@ function ReportContent() {
         } catch { /* fall through to fetch */ }
       }
 
+      // 3. Fetch from API as last resort
       try {
         const res = await fetch('/api/audit', {
           method: 'POST',
@@ -663,12 +689,18 @@ function ReportContent() {
 
   if (!result) return null
 
-  // Show lead capture form before revealing the report
+  // Show lead capture form before revealing the report (only if no hash data)
   if (!leadCaptured) {
     return (
       <LeadCaptureForm
         result={result}
         onComplete={() => {
+          // Add hash to URL so the current page becomes a shareable link
+          if (!window.location.hash.startsWith('#data=') && result) {
+            const jsonStr = JSON.stringify(result)
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)))
+            window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#data=${encoded}`)
+          }
           setLeadCaptured(true)
           trackAuditResult(result.url, result.score)
         }}
@@ -676,8 +708,21 @@ function ReportContent() {
     )
   }
 
+  // Build share URL: include hash data so recipients see results directly
   const shareUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/report?url=${encodeURIComponent(urlParam || '')}`
+    ? (() => {
+        const hash = window.location.hash
+        if (hash.startsWith('#data=')) {
+          return `${window.location.origin}/report?url=${encodeURIComponent(urlParam || '')}${hash}`
+        }
+        // Generate hash from current result for sharing
+        if (result) {
+          const jsonStr = JSON.stringify(result)
+          const encoded = btoa(unescape(encodeURIComponent(jsonStr)))
+          return `${window.location.origin}/report?url=${encodeURIComponent(urlParam || '')}#data=${encoded}`
+        }
+        return `${window.location.origin}/report?url=${encodeURIComponent(urlParam || '')}`
+      })()
     : ''
 
   const whatsappMessage = encodeURIComponent(

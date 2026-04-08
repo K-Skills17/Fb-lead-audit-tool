@@ -34,9 +34,11 @@ export default function Home() {
         return
       }
 
-      sessionStorage.setItem('auditResult', JSON.stringify(data))
+      // Encode results as compressed base64 in URL hash for shareable links
+      const jsonStr = JSON.stringify(data)
+      const encoded = btoa(unescape(encodeURIComponent(jsonStr)))
       const encodedUrl = encodeURIComponent(url.trim())
-      router.push(`/report?url=${encodedUrl}`)
+      window.location.href = `/report?url=${encodedUrl}#data=${encoded}`
     } catch {
       setError('Erro de conexao. Verifique sua internet e tente novamente.')
       setLoading(false)
