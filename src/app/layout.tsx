@@ -58,7 +58,7 @@ export default function RootLayout({
           />
         </noscript>
       </head>
-      <body className="min-h-screen bg-[#0a0a0a]">
+      <body className="min-h-screen bg-[#FAFAF8]">
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

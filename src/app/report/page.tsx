@@ -190,12 +190,12 @@ function ScoreRing({ score }: { score: number }) {
   const radius = 70
   const circumference = 2 * Math.PI * radius
   const progress = (score / 100) * circumference
-  const color = score >= 80 ? '#22c55e' : score >= 50 ? '#c5a368' : '#ef4444'
+  const color = score >= 80 ? '#27AE60' : score >= 50 ? '#C4A265' : '#E74C3C'
 
   return (
     <div className="relative inline-flex items-center justify-center">
       <svg width="180" height="180" className="-rotate-90">
-        <circle cx="90" cy="90" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="12" />
+        <circle cx="90" cy="90" r={radius} fill="none" stroke="#E8E4DC" strokeWidth="12" />
         <circle
           cx="90" cy="90" r={radius} fill="none"
           stroke={color} strokeWidth="12" strokeLinecap="round"
@@ -206,7 +206,7 @@ function ScoreRing({ score }: { score: number }) {
       </svg>
       <div className="absolute text-center">
         <div className="text-5xl font-bold" style={{ color }}>{score}</div>
-        <div className="text-sm text-[#f9f6f0]/40 font-medium">de 100</div>
+        <div className="text-sm text-[#999999] font-medium">de 100</div>
       </div>
     </div>
   )
@@ -214,20 +214,20 @@ function ScoreRing({ score }: { score: number }) {
 
 function ScoreVerdict({ score }: { score: number }) {
   if (score >= 80) return (
-    <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-300 px-4 py-2 rounded-full text-sm font-semibold">
-      <span className="w-2 h-2 bg-green-400 rounded-full" />
+    <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-semibold border border-green-200">
+      <span className="w-2 h-2 bg-green-500 rounded-full" />
       Otimo! Seu site esta bem configurado
     </div>
   )
   if (score >= 50) return (
-    <div className="inline-flex items-center gap-2 bg-[#c5a368]/20 text-[#d4b87a] px-4 py-2 rounded-full text-sm font-semibold">
-      <span className="w-2 h-2 bg-[#c5a368] rounded-full" />
+    <div className="inline-flex items-center gap-2 bg-[#C4A265]/10 text-[#A88A52] px-4 py-2 rounded-full text-sm font-semibold border border-[#C4A265]/20">
+      <span className="w-2 h-2 bg-[#C4A265] rounded-full" />
       Bom, mas pode melhorar bastante
     </div>
   )
   return (
-    <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 px-4 py-2 rounded-full text-sm font-semibold">
-      <span className="w-2 h-2 bg-red-400 rounded-full" />
+    <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-full text-sm font-semibold border border-red-200">
+      <span className="w-2 h-2 bg-red-500 rounded-full" />
       Precisa de atencao urgente
     </div>
   )
@@ -237,14 +237,14 @@ function CategoryProgress({ checks }: { checks: AuditCheck[] }) {
   const passed = checks.filter(c => c.passed).length
   const total = checks.length
   const pct = Math.round((passed / total) * 100)
-  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-[#c5a368]' : 'bg-red-500'
+  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-[#C4A265]' : 'bg-red-500'
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[#E8E4DC] rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all duration-700 ease-out`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-sm font-semibold text-[#f9f6f0]/60 whitespace-nowrap">{passed}/{total}</span>
+      <span className="text-sm font-semibold text-[#6B6B6B] whitespace-nowrap">{passed}/{total}</span>
     </div>
   )
 }
@@ -257,9 +257,9 @@ function CheckItem({ check }: { check: AuditCheck }) {
     : check.message
 
   return (
-    <div className={`px-5 py-4 flex items-start gap-4 ${!check.passed ? 'bg-red-500/5' : ''}`}>
+    <div className={`px-5 py-4 flex items-start gap-4 ${!check.passed ? 'bg-red-50/50' : ''}`}>
       <div className={`mt-1 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center
-        ${check.passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+        ${check.passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
         {check.passed ? (
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -272,16 +272,16 @@ function CheckItem({ check }: { check: AuditCheck }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className={`font-medium ${check.passed ? 'text-[#f9f6f0]/70' : 'text-[#f9f6f0]'}`}>
+          <span className={`font-medium ${check.passed ? 'text-[#6B6B6B]' : 'text-[#1A1A1A]'}`}>
             {displayName}
           </span>
           {!check.passed && check.severity === 'critical' && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
               Importante
             </span>
           )}
         </div>
-        <p className={`text-sm leading-relaxed ${check.passed ? 'text-[#f9f6f0]/40' : 'text-[#f9f6f0]/60'}`}>
+        <p className={`text-sm leading-relaxed ${check.passed ? 'text-[#999999]' : 'text-[#6B6B6B]'}`}>
           {displayMessage}
         </p>
       </div>
@@ -296,25 +296,25 @@ function CategoryCard({ name, checks }: { name: string; checks: AuditCheck[] }) 
   const allPassed = failedChecks.length === 0
 
   return (
-    <div className={`bg-white/5 rounded-2xl border overflow-hidden transition-all ${allPassed ? 'border-green-500/20' : 'border-white/10'}`}>
-      <div className="px-6 py-5 border-b border-white/10">
+    <div className={`bg-white rounded-2xl border overflow-hidden transition-all shadow-sm ${allPassed ? 'border-green-200' : 'border-[#E8E4DC]'}`}>
+      <div className="px-6 py-5 border-b border-[#E8E4DC]">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{meta.icon}</span>
             <div>
-              <h3 className="font-bold text-[#f9f6f0] text-lg">{meta.label}</h3>
-              <p className="text-sm text-[#f9f6f0]/50">{meta.description}</p>
+              <h3 className="font-bold text-[#1A1A1A] text-lg">{meta.label}</h3>
+              <p className="text-sm text-[#6B6B6B]">{meta.description}</p>
             </div>
           </div>
           {allPassed && (
-            <span className="bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+            <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
               Tudo certo!
             </span>
           )}
         </div>
         <CategoryProgress checks={checks} />
       </div>
-      <div className="divide-y divide-white/5">
+      <div className="divide-y divide-[#E8E4DC]/50">
         {failedChecks.map((check, i) => (
           <CheckItem key={`fail-${i}`} check={check} />
         ))}
@@ -334,17 +334,17 @@ function TopPriorities({ checks }: { checks: AuditCheck[] }) {
   if (critical.length === 0) return null
 
   return (
-    <div className="bg-white/5 rounded-2xl border border-red-500/20 overflow-hidden">
-      <div className="px-6 py-5 border-b border-red-500/20 bg-red-500/10">
-        <h2 className="font-bold text-[#f9f6f0] text-lg flex items-center gap-2">
+    <div className="bg-white rounded-2xl border border-red-200 overflow-hidden shadow-sm">
+      <div className="px-6 py-5 border-b border-red-200 bg-red-50">
+        <h2 className="font-bold text-[#1A1A1A] text-lg flex items-center gap-2">
           <span className="text-xl">⚡</span>
           Prioridades — Corrija Primeiro
         </h2>
-        <p className="text-sm text-[#f9f6f0]/60 mt-1">
+        <p className="text-sm text-[#6B6B6B] mt-1">
           Estes itens tem o maior impacto no seu negocio. Corrigir eles pode trazer mais clientes rapidamente.
         </p>
       </div>
-      <div className="divide-y divide-red-500/10">
+      <div className="divide-y divide-red-100">
         {critical.map((check, i) => {
           const displayName = friendlyCheckNames[check.name] || check.name
           const friendly = friendlyMessages[check.name]
@@ -353,19 +353,19 @@ function TopPriorities({ checks }: { checks: AuditCheck[] }) {
 
           return (
             <div key={i} className="px-6 py-4 flex items-start gap-4">
-              <div className="mt-1 w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+              <div className="mt-1 w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 font-bold text-sm">
                 {i + 1}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-[#f9f6f0]">{displayName}</span>
+                  <span className="font-semibold text-[#1A1A1A]">{displayName}</span>
                   {catMeta && (
-                    <span className="text-xs text-[#f9f6f0]/40 bg-white/10 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-[#6B6B6B] bg-[#F0EDE6] px-2 py-0.5 rounded-full">
                       {catMeta.icon} {catMeta.label}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-[#f9f6f0]/60 leading-relaxed">{displayMessage}</p>
+                <p className="text-sm text-[#6B6B6B] leading-relaxed">{displayMessage}</p>
               </div>
             </div>
           )
@@ -384,7 +384,7 @@ function QuickSummaryCards({ result }: { result: AuditResult }) {
         const passed = checks.filter(c => c.passed).length
         const total = checks.length
         const pct = Math.round((passed / total) * 100)
-        const color = pct >= 80 ? 'text-green-400 bg-green-500/10 border-green-500/20' : pct >= 50 ? 'text-[#c5a368] bg-[#c5a368]/10 border-[#c5a368]/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
+        const color = pct >= 80 ? 'text-green-700 bg-green-50 border-green-200' : pct >= 50 ? 'text-[#A88A52] bg-[#C4A265]/10 border-[#C4A265]/20' : 'text-red-700 bg-red-50 border-red-200'
 
         return (
           <div key={name} className={`rounded-xl border p-4 text-center ${color}`}>
@@ -469,7 +469,7 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
     onComplete()
   }
 
-  const scoreColor = result.score >= 80 ? '#22c55e' : result.score >= 50 ? '#c5a368' : '#ef4444'
+  const scoreColor = result.score >= 80 ? '#27AE60' : result.score >= 50 ? '#C4A265' : '#E74C3C'
 
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center px-4 py-12">
@@ -485,24 +485,24 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
             style={{ borderColor: scoreColor }}>
             <span className="text-3xl font-bold" style={{ color: scoreColor }}>{result.score}</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#f9f6f0] mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-2">
             Sua analise esta pronta!
           </h1>
-          <p className="text-[#f9f6f0]/60 text-lg">
+          <p className="text-[#6B6B6B] text-lg">
             Seu site tirou <strong style={{ color: scoreColor }}>{result.score}/100</strong>.
             {result.summary.critical > 0 && (
-              <span className="text-red-300"> Encontramos {result.summary.critical} problema{result.summary.critical > 1 ? 's' : ''} importante{result.summary.critical > 1 ? 's' : ''}.</span>
+              <span className="text-red-600"> Encontramos {result.summary.critical} problema{result.summary.critical > 1 ? 's' : ''} importante{result.summary.critical > 1 ? 's' : ''}.</span>
             )}
           </p>
-          <p className="text-[#f9f6f0]/40 text-sm mt-2">
+          <p className="text-[#999999] text-sm mt-2">
             Preencha abaixo para ver o relatorio completo. Enviaremos tambem uma copia no seu WhatsApp.
           </p>
         </div>
 
         {/* Form card */}
-        <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 shadow-xl p-6 md:p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#E8E4DC] shadow-lg p-6 md:p-8 space-y-5">
           <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-[#f9f6f0]/80 mb-1.5">
+            <label htmlFor="name" className="block text-sm font-semibold text-[#1A1A1A] mb-1.5">
               Seu nome
             </label>
             <input
@@ -511,14 +511,14 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Maria Silva"
-              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#f9f6f0]
-                placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-[#E8E4DC] bg-white text-[#1A1A1A]
+                placeholder:text-[#999999] focus:outline-none focus:ring-2 focus:ring-[#C4A265]/50 focus:border-transparent"
               disabled={submitting}
             />
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-semibold text-[#f9f6f0]/80 mb-1.5">
+            <label htmlFor="phone" className="block text-sm font-semibold text-[#1A1A1A] mb-1.5">
               WhatsApp / Telefone
             </label>
             <input
@@ -527,14 +527,14 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
               value={phone}
               onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
               placeholder="(11) 99999-9999"
-              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#f9f6f0]
-                placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-[#E8E4DC] bg-white text-[#1A1A1A]
+                placeholder:text-[#999999] focus:outline-none focus:ring-2 focus:ring-[#C4A265]/50 focus:border-transparent"
               disabled={submitting}
             />
           </div>
 
           <div>
-            <label htmlFor="clinic" className="block text-sm font-semibold text-[#f9f6f0]/80 mb-1.5">
+            <label htmlFor="clinic" className="block text-sm font-semibold text-[#1A1A1A] mb-1.5">
               Nome da clinica
             </label>
             <input
@@ -543,14 +543,14 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
               value={clinicName}
               onChange={(e) => setClinicName(e.target.value)}
               placeholder="Ex: Clinica Sorriso"
-              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#f9f6f0]
-                placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-[#E8E4DC] bg-white text-[#1A1A1A]
+                placeholder:text-[#999999] focus:outline-none focus:ring-2 focus:ring-[#C4A265]/50 focus:border-transparent"
               disabled={submitting}
             />
           </div>
 
           {formError && (
-            <p className="text-sm text-red-400 bg-red-500/10 px-4 py-2 rounded-lg">{formError}</p>
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{formError}</p>
           )}
 
           <button
@@ -573,7 +573,7 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
             )}
           </button>
 
-          <p className="text-xs text-center text-[#f9f6f0]/40">
+          <p className="text-xs text-center text-[#999999]">
             Seus dados ficam seguros. Usamos apenas para enviar o relatorio.
           </p>
         </form>
@@ -655,14 +655,14 @@ function ReportContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
-        <div className="text-center text-[#f9f6f0] px-4">
-          <svg className="animate-spin w-12 h-12 mx-auto mb-6 text-[#c5a368]" fill="none" viewBox="0 0 24 24">
+        <div className="text-center text-[#1A1A1A] px-4">
+          <svg className="animate-spin w-12 h-12 mx-auto mb-6 text-[#C4A265]" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <h2 className="text-2xl font-bold mb-2">Analisando seu site...</h2>
-          <p className="text-[#f9f6f0]/60 text-lg">Estamos verificando tudo para voce</p>
-          <p className="text-[#f9f6f0]/40 text-sm mt-2">Isso leva de 5 a 15 segundos</p>
+          <p className="text-[#6B6B6B] text-lg">Estamos verificando tudo para voce</p>
+          <p className="text-[#999999] text-sm mt-2">Isso leva de 5 a 15 segundos</p>
         </div>
       </div>
     )
@@ -670,15 +670,15 @@ function ReportContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF8]">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-20 h-20 mx-auto mb-6 bg-[#c5a368]/20 rounded-2xl flex items-center justify-center">
-            <svg className="w-10 h-10 text-[#c5a368]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 mx-auto mb-6 bg-[#C4A265]/10 rounded-2xl flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#C4A265]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-[#f9f6f0] mb-3">Nao conseguimos analisar</h2>
-          <p className="text-[#f9f6f0]/50 mb-8 text-lg">{error}</p>
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-3">Nao conseguimos analisar</h2>
+          <p className="text-[#6B6B6B] mb-8 text-lg">{error}</p>
           <button onClick={() => router.push('/')} className="gradient-accent text-[#1a1a1a] px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition text-lg">
             Tentar Outra URL
           </button>
@@ -739,12 +739,12 @@ function ReportContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a]">
+    <main className="min-h-screen bg-[#FAFAF8]">
       {/* Header */}
-      <div className="gradient-bg text-[#f9f6f0]">
+      <div className="gradient-bg text-[#1A1A1A]">
         <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
           <div className="flex items-center justify-between mb-8">
-            <button onClick={() => router.push('/')} className="flex items-center gap-1 text-[#f9f6f0]/40 hover:text-[#f9f6f0] transition text-sm">
+            <button onClick={() => router.push('/')} className="flex items-center gap-1 text-[#999999] hover:text-[#1A1A1A] transition text-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -757,22 +757,22 @@ function ReportContent() {
             <ScoreRing score={result.score} />
             <div className="text-center md:text-left flex-1">
               <h1 className="text-3xl md:text-4xl font-bold mb-3">Resultado da Analise</h1>
-              <p className="text-[#f9f6f0]/40 mb-4 break-all text-sm">{result.url}</p>
+              <p className="text-[#999999] mb-4 break-all text-sm">{result.url}</p>
               <ScoreVerdict score={result.score} />
 
               <div className="flex flex-wrap gap-4 mt-6 justify-center md:justify-start text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 bg-green-500 rounded-full" />
-                  <span className="text-[#f9f6f0]/60"><strong className="text-[#f9f6f0]">{result.summary.passed}</strong> itens OK</span>
+                  <span className="text-[#6B6B6B]"><strong className="text-[#1A1A1A]">{result.summary.passed}</strong> itens OK</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 bg-red-500 rounded-full" />
-                  <span className="text-[#f9f6f0]/60"><strong className="text-[#f9f6f0]">{result.summary.failed}</strong> para corrigir</span>
+                  <span className="text-[#6B6B6B]"><strong className="text-[#1A1A1A]">{result.summary.failed}</strong> para corrigir</span>
                 </div>
                 {result.summary.critical > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-                    <span className="text-red-300"><strong className="text-[#f9f6f0]">{result.summary.critical}</strong> urgentes</span>
+                    <span className="text-red-600"><strong className="text-[#1A1A1A]">{result.summary.critical}</strong> urgentes</span>
                   </div>
                 )}
               </div>
@@ -795,7 +795,7 @@ function ReportContent() {
 
         {/* Detail Sections */}
         <div className="space-y-6 mb-10">
-          <h2 className="text-xl font-bold text-[#f9f6f0] flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#1A1A1A] flex items-center gap-2">
             Analise Detalhada
           </h2>
           {Object.entries(result.categories).map(([cat, checks]) => (
@@ -804,14 +804,14 @@ function ReportContent() {
         </div>
 
         {/* Share */}
-        <div className="bg-white/5 rounded-2xl border border-white/10 p-5 mb-10">
-          <p className="text-sm font-medium text-[#f9f6f0]/70 mb-3">Compartilhar este relatorio</p>
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] shadow-sm p-5 mb-10">
+          <p className="text-sm font-medium text-[#6B6B6B] mb-3">Compartilhar este relatorio</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               readOnly
               value={shareUrl}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#f9f6f0]/60 w-full"
+              className="flex-1 bg-[#FAFAF8] border border-[#E8E4DC] rounded-xl px-4 py-3 text-sm text-[#6B6B6B] w-full"
               onClick={(e) => (e.target as HTMLInputElement).select()}
             />
             <button
@@ -828,14 +828,14 @@ function ReportContent() {
         </div>
 
         {/* CTA Section */}
-        <div className="rounded-2xl shadow-lg overflow-hidden mb-10 border border-white/10">
-          <div className="gradient-bg p-8 md:p-12 text-center text-[#f9f6f0]">
+        <div className="rounded-2xl shadow-lg overflow-hidden mb-10 border border-[#E8E4DC]">
+          <div className="bg-white p-8 md:p-12 text-center text-[#1A1A1A]">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
               {result.score < 70
                 ? 'Quer que a gente resolva isso pra voce?'
                 : 'Quer turbinar seu site ainda mais?'}
             </h2>
-            <p className="text-[#f9f6f0]/60 mb-8 max-w-xl mx-auto text-lg leading-relaxed">
+            <p className="text-[#6B6B6B] mb-8 max-w-xl mx-auto text-lg leading-relaxed">
               {result.score < 70
                 ? 'Nossa equipe pode corrigir tudo e deixar seu site pronto para atrair mais clientes.'
                 : 'Nossos especialistas podem levar seu site ao proximo nivel.'}
@@ -862,8 +862,8 @@ function ReportContent() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCalendlyClick(result.score)}
-                className="inline-flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20
-                  text-[#f9f6f0] border border-white/20 px-8 py-4 rounded-xl text-lg font-semibold transition-all
+                className="inline-flex items-center justify-center gap-3 bg-[#FAFAF8] hover:bg-[#F0EDE6]
+                  text-[#1A1A1A] border border-[#E8E4DC] px-8 py-4 rounded-xl text-lg font-semibold transition-all
                   hover:-translate-y-0.5"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -873,7 +873,7 @@ function ReportContent() {
               </a>
             </div>
 
-            <p className="mt-6 text-sm text-[#f9f6f0]/40">
+            <p className="mt-6 text-sm text-[#999999]">
               Sem compromisso — a gente so quer te ajudar a crescer.
             </p>
           </div>
@@ -883,7 +883,7 @@ function ReportContent() {
         <div className="text-center pb-12">
           <button
             onClick={() => router.push('/')}
-            className="text-[#f9f6f0]/50 hover:text-[#c5a368] font-medium transition text-lg"
+            className="text-[#6B6B6B] hover:text-[#C4A265] font-medium transition text-lg"
           >
             ← Analisar Outro Site
           </button>
@@ -891,8 +891,8 @@ function ReportContent() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-4">
-        <div className="max-w-5xl mx-auto text-center text-sm text-[#f9f6f0]/40">
+      <footer className="border-t border-[#E8E4DC] py-8 px-4">
+        <div className="max-w-5xl mx-auto text-center text-sm text-[#999999]">
           <p>LK Digital — Ferramenta Gratuita de Auditoria de Sites</p>
         </div>
       </footer>
@@ -904,8 +904,8 @@ export default function ReportPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center gradient-bg">
-        <div className="text-center text-[#f9f6f0]">
-          <svg className="animate-spin w-12 h-12 mx-auto mb-4 text-[#c5a368]" fill="none" viewBox="0 0 24 24">
+        <div className="text-center text-[#1A1A1A]">
+          <svg className="animate-spin w-12 h-12 mx-auto mb-4 text-[#C4A265]" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>

@@ -48,7 +48,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
-      <div className="gradient-bg text-[#f9f6f0]">
+      <div className="gradient-bg text-[#1A1A1A]">
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
           {/* Logo */}
           <div className="mb-10">
@@ -62,9 +62,9 @@ export default function Home() {
             />
           </div>
 
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm mb-8 backdrop-blur-sm border border-white/5">
-            <span className="w-2 h-2 bg-[#c5a368] rounded-full animate-pulse" />
-            Auditoria gratuita e instantanea — sem cadastro
+          <div className="inline-flex items-center gap-2 bg-[#C4A265]/10 rounded-full px-4 py-1.5 text-sm mb-8 border border-[#C4A265]/20">
+            <span className="w-2 h-2 bg-[#C4A265] rounded-full animate-pulse" />
+            <span className="text-[#6B6B6B]">Auditoria gratuita e instantanea — sem cadastro</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
@@ -74,7 +74,7 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-[#f9f6f0]/60 mb-12 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-[#6B6B6B] mb-12 max-w-2xl mx-auto">
             Receba uma auditoria gratuita e instantanea do seu site. Verificamos SEO,
             formularios de contato, problemas mobile e muito mais — em segundos.
           </p>
@@ -83,7 +83,7 @@ export default function Home() {
           <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#f9f6f0]/40">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#999999]">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -94,9 +94,9 @@ export default function Home() {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Digite a URL do seu site (ex: exemplo.com.br)"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 text-[#f9f6f0] text-lg
-                    placeholder:text-[#f9f6f0]/30 focus:outline-none focus:ring-2 focus:ring-[#c5a368]/50
-                    border border-white/10 backdrop-blur-sm"
+                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-[#1A1A1A] text-lg
+                    placeholder:text-[#999999] focus:outline-none focus:ring-2 focus:ring-[#C4A265]/50
+                    border border-[#E8E4DC] shadow-sm"
                   disabled={loading}
                 />
               </div>
@@ -120,28 +120,28 @@ export default function Home() {
             </div>
 
             {error && (
-              <div className="mt-4 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-3 text-red-200 text-sm">
+              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-sm">
                 {error}
               </div>
             )}
           </form>
 
-          <p className="mt-6 text-sm text-[#f9f6f0]/40">
+          <p className="mt-6 text-sm text-[#999999]">
             Leva de 5 a 15 segundos. Verificamos SEO, formularios, WhatsApp, CTAs e responsividade mobile.
           </p>
         </div>
       </div>
 
       {/* O Que Verificamos */}
-      <section className="py-20 px-4 bg-[#0a0a0a]">
+      <section className="py-20 px-4 bg-[#FAFAF8]">
         <div className="max-w-5xl mx-auto">
           <div className="flex justify-center mb-4">
-            <div className="w-6 h-px bg-[#c5a368]" />
+            <div className="w-6 h-px bg-[#C4A265]" />
           </div>
-          <h2 className="text-3xl font-bold text-center text-[#f9f6f0] mb-4">
+          <h2 className="text-3xl font-bold text-center text-[#1A1A1A] mb-4">
             O Que Verificamos
           </h2>
-          <p className="text-center text-[#f9f6f0]/50 mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-[#6B6B6B] mb-12 max-w-2xl mx-auto">
             Nossa auditoria cobre os fatores mais importantes que determinam se seu site converte visitantes em clientes.
           </p>
 
@@ -211,10 +211,10 @@ export default function Home() {
                 desc: 'HTTPS, favicons, atributo de idioma e avisos de conteudo misto.',
               },
             ].map((item) => (
-              <div key={item.title} className="bg-white/5 rounded-xl p-6 border border-white/10 hover:border-[#c5a368]/30 transition-all hover:-translate-y-[1px]">
-                <div className="text-[#c5a368] mb-3">{item.icon}</div>
-                <h3 className="font-semibold text-[#f9f6f0] mb-2">{item.title}</h3>
-                <p className="text-sm text-[#f9f6f0]/50">{item.desc}</p>
+              <div key={item.title} className="bg-white rounded-xl p-6 border border-[#E8E4DC] shadow-sm hover:border-[#C4A265]/40 transition-all hover:-translate-y-[1px] hover:shadow-md">
+                <div className="text-[#C4A265] mb-3">{item.icon}</div>
+                <h3 className="font-semibold text-[#1A1A1A] mb-2">{item.title}</h3>
+                <p className="text-sm text-[#6B6B6B]">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -222,8 +222,8 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-4 bg-[#0a0a0a]">
-        <div className="max-w-5xl mx-auto text-center text-sm text-[#f9f6f0]/40">
+      <footer className="border-t border-[#E8E4DC] py-8 px-4 bg-[#FAFAF8]">
+        <div className="max-w-5xl mx-auto text-center text-sm text-[#999999]">
           <p>LK Digital — Ferramenta Gratuita de Auditoria de Sites</p>
         </div>
       </footer>
