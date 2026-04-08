@@ -577,6 +577,19 @@ function LeadCaptureForm({ result, onComplete }: { result: AuditResult; onComple
             Seus dados ficam seguros. Usamos apenas para enviar o relatorio.
           </p>
         </form>
+
+        {/* Contact Info */}
+        <div className="mt-6 text-center">
+          <p className="text-[#6B6B6B] text-sm font-medium mb-2">Precisa de ajuda? Fale conosco:</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="mailto:contato@lkdigital.org" className="text-[#C4A265] hover:text-[#A88A52] text-sm font-medium transition">
+              📧 contato@lkdigital.org
+            </a>
+            <a href="tel:+5511946851028" className="text-[#C4A265] hover:text-[#A88A52] text-sm font-medium transition">
+              📞 (11) 94685-1028
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -876,6 +889,19 @@ function ReportContent() {
             <p className="mt-6 text-sm text-[#999999]">
               Sem compromisso — a gente so quer te ajudar a crescer.
             </p>
+          </div>
+        </div>
+
+        {/* Contact Info */}
+        <div className="bg-white rounded-2xl border border-[#E8E4DC] shadow-sm p-6 mb-10 text-center">
+          <p className="text-[#6B6B6B] font-medium mb-3">Precisa de ajuda? Fale conosco:</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="mailto:contato@lkdigital.org" className="inline-flex items-center gap-2 text-[#C4A265] hover:text-[#A88A52] font-medium transition">
+              📧 contato@lkdigital.org
+            </a>
+            <a href="tel:+5511946851028" className="inline-flex items-center gap-2 text-[#C4A265] hover:text-[#A88A52] font-medium transition">
+              📞 (11) 94685-1028
+            </a>
           </div>
         </div>
 
