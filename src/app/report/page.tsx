@@ -56,6 +56,11 @@ const categoryMeta: Record<string, { icon: string; label: string; description: s
     label: 'Saude Tecnica',
     description: 'O basico do seu site esta funcionando corretamente?',
   },
+  'Velocidade': {
+    icon: '⚡',
+    label: 'Velocidade do Site',
+    description: 'Seu site carrega rapido no celular?',
+  },
 }
 
 const friendlyCheckNames: Record<string, string> = {
@@ -83,6 +88,12 @@ const friendlyCheckNames: Record<string, string> = {
   'Favicon': 'Icone na aba do navegador',
   'Atributo de Idioma': 'Idioma da pagina definido',
   'Conteudo Misto': 'Seguranca dos recursos da pagina',
+  'Pontuacao de Performance': 'Nota de velocidade (Google)',
+  'Carregamento do Conteudo Principal (LCP)': 'Tempo para ver o conteudo',
+  'Primeira Exibicao de Conteudo (FCP)': 'Tempo da primeira exibicao',
+  'Estabilidade Visual (CLS)': 'Estabilidade ao carregar',
+  'Tempo de Bloqueio (TBT)': 'Responsividade aos toques',
+  'Teste de Velocidade': 'Teste de velocidade',
 }
 
 const friendlyMessages: Record<string, { good: string; bad: string }> = {
@@ -181,6 +192,30 @@ const friendlyMessages: Record<string, { good: string; bad: string }> = {
   'Conteudo Misto': {
     good: 'Todos os recursos carregam de forma segura.',
     bad: 'Alguns recursos carregam de forma insegura — navegadores podem bloquear partes do seu site.',
+  },
+  'Pontuacao de Performance': {
+    good: 'Seu site tem boa velocidade segundo o Google — visitantes nao ficam esperando.',
+    bad: 'Seu site esta lento segundo o Google — sites lentos perdem ate 53% dos visitantes no celular.',
+  },
+  'Carregamento do Conteudo Principal (LCP)': {
+    good: 'O conteudo principal do site aparece rapido para o visitante.',
+    bad: 'O conteudo principal demora para aparecer — visitantes podem desistir antes de ver seu site.',
+  },
+  'Primeira Exibicao de Conteudo (FCP)': {
+    good: 'Seu site mostra algo na tela rapidamente — boa primeira impressao.',
+    bad: 'Seu site demora para mostrar qualquer coisa — visitantes ficam olhando tela branca.',
+  },
+  'Estabilidade Visual (CLS)': {
+    good: 'Seu site nao "pula" ao carregar — boa experiencia para o visitante.',
+    bad: 'Elementos do site se movem ao carregar — isso confunde e frustra os visitantes.',
+  },
+  'Tempo de Bloqueio (TBT)': {
+    good: 'Seu site responde rapido quando o visitante toca ou clica.',
+    bad: 'Seu site trava ao interagir — visitantes pensam que esta quebrado e vao embora.',
+  },
+  'Teste de Velocidade': {
+    good: 'Teste de velocidade concluido com sucesso.',
+    bad: 'Nao conseguimos testar a velocidade — o Google PageSpeed nao conseguiu acessar o site.',
   },
 }
 

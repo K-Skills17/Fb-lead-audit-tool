@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 interface AuditCheck {
   category: string
@@ -533,6 +533,131 @@ function checkPerformance($: cheerio.CheerioAPI, html: string): AuditCheck[] {
   return checks
 }
 
+async function checkPageSpeed(url: string): Promise<AuditCheck[]> {
+  const checks: AuditCheck[] = []
+
+  try {
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance`
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000)
+
+    const res = await fetch(apiUrl, { signal: controller.signal })
+    clearTimeout(timeout)
+
+    if (!res.ok) {
+      throw new Error(`PageSpeed API returned ${res.status}`)
+    }
+
+    const data = await res.json()
+    const lighthouse = data.lighthouseResult
+
+    if (!lighthouse) {
+      throw new Error('No lighthouse data returned')
+    }
+
+    // Overall performance score (0-1 from API, convert to 0-100)
+    const perfScore = Math.round((lighthouse.categories?.performance?.score ?? 0) * 100)
+    checks.push({
+      category: 'Velocidade',
+      name: 'Pontuacao de Performance',
+      passed: perfScore >= 50,
+      severity: perfScore < 50 ? 'critical' : 'warning',
+      message: perfScore >= 90
+        ? `Excelente! Performance ${perfScore}/100 — seu site carrega rapido`
+        : perfScore >= 50
+          ? `Performance ${perfScore}/100 — pode melhorar para nao perder visitantes`
+          : `Performance ${perfScore}/100 — site lento afasta clientes, especialmente no celular`,
+      points: 12,
+    })
+
+    // Largest Contentful Paint (LCP) - good < 2.5s, needs improvement < 4s, poor >= 4s
+    const lcpMs = lighthouse.audits?.['largest-contentful-paint']?.numericValue
+    if (lcpMs !== undefined) {
+      const lcpSec = (lcpMs / 1000).toFixed(1)
+      checks.push({
+        category: 'Velocidade',
+        name: 'Carregamento do Conteudo Principal (LCP)',
+        passed: lcpMs < 4000,
+        severity: lcpMs >= 4000 ? 'critical' : 'warning',
+        message: lcpMs < 2500
+          ? `Otimo! Conteudo principal carrega em ${lcpSec}s — rapido para o visitante`
+          : lcpMs < 4000
+            ? `Conteudo principal carrega em ${lcpSec}s — ideal seria abaixo de 2.5s`
+            : `Conteudo principal demora ${lcpSec}s para carregar — muito lento, visitantes desistem antes de ver seu site`,
+        points: 10,
+      })
+    }
+
+    // First Contentful Paint (FCP) - good < 1.8s, needs improvement < 3s, poor >= 3s
+    const fcpMs = lighthouse.audits?.['first-contentful-paint']?.numericValue
+    if (fcpMs !== undefined) {
+      const fcpSec = (fcpMs / 1000).toFixed(1)
+      checks.push({
+        category: 'Velocidade',
+        name: 'Primeira Exibicao de Conteudo (FCP)',
+        passed: fcpMs < 3000,
+        severity: fcpMs >= 3000 ? 'critical' : 'warning',
+        message: fcpMs < 1800
+          ? `Otimo! Primeira exibicao em ${fcpSec}s — visitante ve algo rapido`
+          : fcpMs < 3000
+            ? `Primeira exibicao em ${fcpSec}s — ideal seria abaixo de 1.8s`
+            : `Primeira exibicao demora ${fcpSec}s — visitante fica olhando tela branca`,
+        points: 8,
+      })
+    }
+
+    // Cumulative Layout Shift (CLS) - good < 0.1, needs improvement < 0.25, poor >= 0.25
+    const clsValue = lighthouse.audits?.['cumulative-layout-shift']?.numericValue
+    if (clsValue !== undefined) {
+      const clsFormatted = clsValue.toFixed(3)
+      checks.push({
+        category: 'Velocidade',
+        name: 'Estabilidade Visual (CLS)',
+        passed: clsValue < 0.25,
+        severity: clsValue >= 0.25 ? 'warning' : 'info',
+        message: clsValue < 0.1
+          ? `Otimo! Estabilidade visual ${clsFormatted} — pagina nao "pula" ao carregar`
+          : clsValue < 0.25
+            ? `Estabilidade visual ${clsFormatted} — elementos se movem um pouco ao carregar, pode confundir o visitante`
+            : `Estabilidade visual ${clsFormatted} — pagina "pula" muito ao carregar, visitantes podem clicar no lugar errado`,
+        points: 7,
+      })
+    }
+
+    // Total Blocking Time (TBT) - good < 200ms, needs improvement < 600ms, poor >= 600ms
+    const tbtMs = lighthouse.audits?.['total-blocking-time']?.numericValue
+    if (tbtMs !== undefined) {
+      const tbtFormatted = tbtMs < 1000 ? `${Math.round(tbtMs)}ms` : `${(tbtMs / 1000).toFixed(1)}s`
+      checks.push({
+        category: 'Velocidade',
+        name: 'Tempo de Bloqueio (TBT)',
+        passed: tbtMs < 600,
+        severity: tbtMs >= 600 ? 'critical' : 'warning',
+        message: tbtMs < 200
+          ? `Otimo! Tempo de bloqueio ${tbtFormatted} — site responde rapido aos toques`
+          : tbtMs < 600
+            ? `Tempo de bloqueio ${tbtFormatted} — site pode demorar para responder a toques e cliques`
+            : `Tempo de bloqueio ${tbtFormatted} — site trava ao interagir, visitantes pensam que esta quebrado`,
+        points: 8,
+      })
+    }
+
+  } catch (err) {
+    console.warn('PageSpeed API check failed:', err)
+    // Add a single informational check indicating speed test couldn't run
+    checks.push({
+      category: 'Velocidade',
+      name: 'Teste de Velocidade',
+      passed: false,
+      severity: 'warning',
+      message: 'Nao foi possivel testar a velocidade do site — o Google PageSpeed nao conseguiu acessar a pagina',
+      points: 10,
+    })
+  }
+
+  return checks
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -554,6 +679,9 @@ export async function POST(request: NextRequest) {
     let html: string
     let finalUrl: string
 
+    // Run HTML fetch and PageSpeed API in parallel
+    const pageSpeedPromise = checkPageSpeed(url)
+
     try {
       const result = await fetchPage(url)
       html = result.html
@@ -566,6 +694,7 @@ export async function POST(request: NextRequest) {
     }
 
     const $ = cheerio.load(html)
+    const pageSpeedChecks = await pageSpeedPromise
     const auditTime = Date.now() - startTime
 
     const allChecks: AuditCheck[] = [
@@ -576,6 +705,7 @@ export async function POST(request: NextRequest) {
       ...checkMobile($),
       ...checkAIVisibility($, html, finalUrl),
       ...checkPerformance($, html),
+      ...pageSpeedChecks,
     ]
 
     const totalPoints = allChecks.reduce((sum, c) => sum + c.points, 0)
