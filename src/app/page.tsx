@@ -34,11 +34,10 @@ export default function Home() {
         return
       }
 
-      // Encode results as compressed base64 in URL hash for shareable links
-      const jsonStr = JSON.stringify(data)
-      const encoded = btoa(unescape(encodeURIComponent(jsonStr)))
+      // Store result in sessionStorage — report page will load it and show the lead gate
+      sessionStorage.setItem('auditResult', JSON.stringify(data))
       const encodedUrl = encodeURIComponent(url.trim())
-      window.location.href = `/report?url=${encodedUrl}#data=${encoded}`
+      window.location.href = `/report?url=${encodedUrl}`
     } catch {
       setError('Erro de conexao. Verifique sua internet e tente novamente.')
       setLoading(false)
