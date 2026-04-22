@@ -270,11 +270,13 @@ function checkCTA($: cheerio.CheerioAPI): AuditCheck[] {
     points: 12,
   })
 
-  // Above-the-fold CTA — check header, hero-like sections, or first section inside main
-  const heroSection = $('header, .hero, .banner, [class*="hero"], [id*="hero"], [aria-label*="principal"], section:first-of-type, main > section:first-child, main > div:first-child').first()
-  const heroCTA = heroSection.find('a, button').toArray().some(el => {
-    const text = $(el).text().toLowerCase()
-    return ctaKeywords.some(kw => text.includes(kw))
+  // Above-the-fold CTA — check all hero-like sections for CTA buttons
+  const heroSections = $('header, .hero, .banner, [class*="hero"], [id*="hero"], [aria-label*="principal"], section:first-of-type, main > section:first-child, main > div:first-child')
+  const heroCTA = heroSections.toArray().some(section => {
+    return $(section).find('a, button').toArray().some(el => {
+      const text = $(el).text().toLowerCase()
+      return ctaKeywords.some(kw => text.includes(kw))
+    })
   })
 
   checks.push({
