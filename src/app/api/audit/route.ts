@@ -270,8 +270,8 @@ function checkCTA($: cheerio.CheerioAPI): AuditCheck[] {
     points: 12,
   })
 
-  // Above-the-fold CTA
-  const heroSection = $('header, .hero, .banner, [class*="hero"], section:first-of-type').first()
+  // Above-the-fold CTA — check header, hero-like sections, or first section inside main
+  const heroSection = $('header, .hero, .banner, [class*="hero"], [id*="hero"], [aria-label*="principal"], section:first-of-type, main > section:first-child, main > div:first-child').first()
   const heroCTA = heroSection.find('a, button').toArray().some(el => {
     const text = $(el).text().toLowerCase()
     return ctaKeywords.some(kw => text.includes(kw))
@@ -328,7 +328,7 @@ function checkMobile($: cheerio.CheerioAPI): AuditCheck[] {
   return checks
 }
 
-function checkAIVisibility($: cheerio.CheerioAPI, html: string, finalUrl: string): AuditCheck[] {
+async function checkAIVisibility($: cheerio.CheerioAPI, html: string, finalUrl: string): Promise<AuditCheck[]> {
   const checks: AuditCheck[] = []
 
   // 1. Structured Data (JSON-LD / Schema.org)
@@ -443,19 +443,38 @@ function checkAIVisibility($: cheerio.CheerioAPI, html: string, finalUrl: string
     points: 5,
   })
 
-  // 5. Sitemap check (fetch /sitemap.xml)
-  // We check for sitemap reference in HTML or robots meta
+  // 5. Sitemap check — check HTML references AND try fetching /sitemap.xml directly
   const hasSitemapLink = html.toLowerCase().includes('sitemap.xml') ||
     $('link[rel="sitemap"]').length > 0
+
+  let hasSitemapFile = false
+  if (!hasSitemapLink) {
+    try {
+      const baseUrl = new URL(finalUrl)
+      const sitemapUrl = `${baseUrl.protocol}//${baseUrl.host}/sitemap.xml`
+      const sitemapController = new AbortController()
+      const sitemapTimeout = setTimeout(() => sitemapController.abort(), 5000)
+      const sitemapRes = await fetch(sitemapUrl, {
+        method: 'HEAD',
+        signal: sitemapController.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WebAuditBot/1.0)' },
+        redirect: 'follow',
+      })
+      clearTimeout(sitemapTimeout)
+      hasSitemapFile = sitemapRes.ok
+    } catch { /* sitemap not reachable */ }
+  }
+
+  const hasSitemap = hasSitemapLink || hasSitemapFile
 
   checks.push({
     category: 'Visibilidade IA',
     name: 'Sitemap XML',
-    passed: hasSitemapLink,
+    passed: hasSitemap,
     severity: 'info',
-    message: hasSitemapLink
-      ? 'Referencia ao sitemap.xml encontrada — ajuda bots de IA a descobrir todo o conteudo'
-      : 'Nenhuma referencia ao sitemap.xml encontrada — crie um sitemap para que bots de IA indexem todas as paginas',
+    message: hasSitemap
+      ? 'Sitemap.xml encontrado — ajuda bots de IA a descobrir todo o conteudo'
+      : 'Nenhum sitemap.xml encontrado — crie um sitemap para que bots de IA indexem todas as paginas',
     points: 5,
   })
 
@@ -705,7 +724,7 @@ export async function POST(request: NextRequest) {
       ...checkWhatsApp($, html),
       ...checkCTA($),
       ...checkMobile($),
-      ...checkAIVisibility($, html, finalUrl),
+      ...await checkAIVisibility($, html, finalUrl),
       ...checkPerformance($, html),
       ...pageSpeedChecks,
     ]
