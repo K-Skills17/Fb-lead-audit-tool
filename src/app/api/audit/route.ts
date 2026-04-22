@@ -537,7 +537,9 @@ async function checkPageSpeed(url: string): Promise<AuditCheck[]> {
   const checks: AuditCheck[] = []
 
   try {
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance`
+    const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY || ''
+    const keyParam = apiKey ? `&key=${apiKey}` : ''
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance${keyParam}`
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 30000)
 
